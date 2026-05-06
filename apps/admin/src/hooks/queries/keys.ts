@@ -244,4 +244,13 @@ export const queryKeys = {
     detail: (id: string) =>
       [...queryKeys.metaPresets.all, 'detail', id] as const,
   },
+
+  // === Enrichment ===
+  enrichment: {
+    all: ['enrichment'] as const,
+    lists: () => [...queryKeys.enrichment.all, 'list'] as const,
+    list: (params?: object) =>
+      [...queryKeys.enrichment.lists(), params] as const,
+    providers: () => [...queryKeys.enrichment.all, 'providers'] as const,
+  },
 }

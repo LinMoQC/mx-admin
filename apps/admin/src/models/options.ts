@@ -81,8 +81,50 @@ export namespace MxServerOptions {
     emailSubscribe: boolean
   }
 
+  export interface GitHubIntegrationOption {
+    enabled?: boolean
+    token?: string
+  }
+
+  export interface TmdbIntegrationOption {
+    enabled?: boolean
+    apiKey?: string
+  }
+
+  export interface BangumiIntegrationOption {
+    enabled?: boolean
+    accessToken?: string
+  }
+
+  export interface NeoDBIntegrationOption {
+    enabled?: boolean
+  }
+
+  export interface ArxivIntegrationOption {
+    enabled?: boolean
+  }
+
+  export interface LeetcodeIntegrationOption {
+    enabled?: boolean
+  }
+
+  export interface NeteaseMusicIntegrationOption {
+    enabled?: boolean
+  }
+
+  export interface QQMusicIntegrationOption {
+    enabled?: boolean
+  }
+
   export interface ThirdPartyServiceIntegrationOption {
-    xLogSiteId: string
+    github?: GitHubIntegrationOption
+    tmdb?: TmdbIntegrationOption
+    bangumi?: BangumiIntegrationOption
+    neodb?: NeoDBIntegrationOption
+    arxiv?: ArxivIntegrationOption
+    leetcode?: LeetcodeIntegrationOption
+    neteaseMusic?: NeteaseMusicIntegrationOption
+    qqMusic?: QQMusicIntegrationOption
   }
 
   export interface AuthSecurityOption {

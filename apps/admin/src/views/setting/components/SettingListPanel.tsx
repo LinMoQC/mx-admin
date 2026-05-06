@@ -4,6 +4,7 @@ import {
   FileText as FileTextIcon,
   Globe as GlobeIcon,
   ListPlus as ListPlusIcon,
+  Puzzle as PuzzleIcon,
   Search as SearchIcon,
   Settings as SettingsIcon,
   Shield as ShieldIcon,
@@ -53,6 +54,7 @@ const iconMap: Record<string, LucideIcon> = {
   'list-plus': ListPlusIcon,
   database: DatabaseIcon,
   'file-text': FileTextIcon,
+  puzzle: PuzzleIcon,
 }
 
 export const SettingListPanel = defineComponent({

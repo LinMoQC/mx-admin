@@ -99,6 +99,21 @@ export const SectionFields = defineComponent({
 
               // Handle nested fields (object type)
               if (field.fields && field.fields.length > 0) {
+                if (field.subsection) {
+                  return (
+                    <Subsection
+                      key={fieldPath}
+                      title={field.subsection.title}
+                      description={field.subsection.description}
+                    >
+                      <SectionFields
+                        fields={field.fields}
+                        formData={formData}
+                        dataKeyPrefix={fieldPath}
+                      />
+                    </Subsection>
+                  )
+                }
                 return (
                   <SectionFields
                     fields={field.fields}
@@ -290,5 +305,29 @@ export const FormFieldItem = defineComponent({
         </SettingsItem>
       )
     }
+  },
+})
+
+const Subsection = defineComponent({
+  props: {
+    title: { type: String, required: true },
+    description: String,
+  },
+  setup(props, { slots }) {
+    return () => (
+      <div class="border-t border-neutral-100 first:border-t-0 dark:border-neutral-800">
+        <div class="px-4 pb-2 pt-4">
+          <div class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            {props.title}
+          </div>
+          {props.description && (
+            <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              {props.description}
+            </p>
+          )}
+        </div>
+        {slots.default?.()}
+      </div>
+    )
   },
 })

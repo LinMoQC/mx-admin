@@ -13,6 +13,7 @@ import {
   Bug as DebugIcon,
   FileEdit as DraftIcon,
   MoreHorizontal as EllipsisHIcon,
+  DatabaseZap as EnrichmentIcon,
   Eye as EyeIcon,
   File as FileIcon,
   FileText as FileTextIcon,
@@ -460,6 +461,15 @@ export const routeForMenu: Array<RouteRecordRaw> = [
           icon: <UndoAltIcon />,
         },
         component: () => import('../views/maintenance/backup'),
+      },
+      {
+        path: 'enrichment',
+        name: RouteName.Enrichment,
+        meta: {
+          title: 'Enrichment 缓存',
+          icon: <EnrichmentIcon />,
+        },
+        component: () => import('../views/enrichment'),
       },
     ],
   },

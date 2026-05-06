@@ -17,7 +17,9 @@ import type { RecentlyModel } from '~/models/recently'
 import type { PropType } from 'vue'
 
 import { recentlyApi } from '~/api'
+import { enrichmentApi } from '~/api/enrichment'
 import { HeaderActionButton } from '~/components/button/header-action-button'
+import { EnrichmentCard } from '~/components/enrichment-card'
 import { useShorthand } from '~/components/shorthand'
 import { RelativeTime } from '~/components/time/relative-time'
 import { useLayout } from '~/layouts/content'
@@ -53,9 +55,37 @@ const RecentlyItem = defineComponent({
       type: Function as PropType<() => void>,
       required: true,
     },
+    onEnrichmentUpdate: {
+      type: Function as PropType<
+        (next: NonNullable<RecentlyModel['enrichment']>) => void
+      >,
+      required: true,
+    },
   },
   setup(props) {
     const totalVotes = computed(() => props.item.up + props.item.down)
+    const retrying = ref(false)
+    const handleRetryEnrichment = async () => {
+      const provider = props.item.enrichmentProvider
+      const externalId = props.item.enrichmentExternalId
+      if (!provider || !externalId) return
+      retrying.value = true
+      try {
+        const result = await enrichmentApi.refresh(provider, externalId)
+        props.onEnrichmentUpdate(result)
+        toast.success('已刷新')
+      } catch (e: any) {
+        toast.error(e?.message || '刷新失败')
+      } finally {
+        retrying.value = false
+      }
+    }
+    const enrichmentFailed = computed(
+      () =>
+        !!props.item.enrichmentProvider &&
+        !!props.item.enrichmentExternalId &&
+        !props.item.enrichment,
+    )
     const upPercentage = computed(() =>
       totalVotes.value > 0
         ? Math.round((props.item.up / totalVotes.value) * 100)
@@ -72,6 +102,19 @@ const RecentlyItem = defineComponent({
         <div class={styles.content}>
           <p class={styles.text}>{props.item.content}</p>
         </div>
+
+        {(props.item.enrichment || enrichmentFailed.value) && (
+          <div class="mt-2">
+            <EnrichmentCard
+              enrichment={props.item.enrichment}
+              provider={props.item.enrichmentProvider ?? undefined}
+              externalId={props.item.enrichmentExternalId ?? undefined}
+              failed={enrichmentFailed.value}
+              retrying={retrying.value}
+              onRetry={handleRetryEnrichment}
+            />
+          </div>
+        )}
 
         {props.item.ref && props.item.refType && (
           <div class={styles.reference}>
@@ -302,6 +345,9 @@ export default defineComponent({
                     await recentlyApi.delete(item.id)
                     toast.success('删除成功')
                     data.value.splice(data.value.indexOf(item), 1)
+                  }}
+                  onEnrichmentUpdate={(next) => {
+                    data.value[index] = { ...item, enrichment: next }
                   }}
                 />
               ))}

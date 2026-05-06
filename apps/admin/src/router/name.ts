@@ -48,6 +48,7 @@ export enum RouteName {
   AiSlugBackfill = 'ai-slug-backfill',
 
   Maintain = 'maintain',
+  Enrichment = 'enrichment',
   Other = 'other',
   Reader = 'reader',
   Draft = 'draft',

@@ -1,3 +1,5 @@
+import type { EnrichmentResult } from './enrichment'
+
 export enum RecentlyRefTypes {
   Post = 'post',
   Note = 'note',
@@ -19,6 +21,10 @@ export interface RecentlyModel {
   ref?: RecentlyRefType & { [key: string]: any }
   refId?: string
   refType?: RecentlyRefTypes
+
+  enrichmentProvider?: string | null
+  enrichmentExternalId?: string | null
+  enrichment?: EnrichmentResult | null
 
   up: number
   down: number

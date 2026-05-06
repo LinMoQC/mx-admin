@@ -2,16 +2,34 @@ import type { RecentlyModel } from '~/models/recently'
 
 import { request } from '~/utils/request'
 
+export type RecentlyType =
+  | 'text'
+  | 'link'
+  | 'book'
+  | 'media'
+  | 'music'
+  | 'github'
+  | 'academic'
+  | 'code'
+
+export interface RecentlyCreatePayload {
+  type?: RecentlyType
+  content?: string
+  metadata?: Record<string, unknown>
+}
+
+export type RecentlyUpdatePayload = RecentlyCreatePayload
+
 export const recentlyApi = {
   // 获取最近访问列表
   getAll: () => request.get<RecentlyModel[]>('/recently/all'),
 
   // 创建速记
-  create: (data: { content: string }) =>
+  create: (data: RecentlyCreatePayload) =>
     request.post<RecentlyModel>('/recently', { data }),
 
   // 更新速记
-  update: (id: string, data: { content: string }) =>
+  update: (id: string, data: RecentlyUpdatePayload) =>
     request.put<RecentlyModel>(`/recently/${id}`, { data }),
 
   // 删除最近访问项

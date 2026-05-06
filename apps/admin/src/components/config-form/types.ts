@@ -40,6 +40,10 @@ export interface FormField {
   required?: boolean
   ui: UIConfig
   fields?: FormField[]
+  subsection?: {
+    title: string
+    description?: string
+  }
 }
 
 export interface FormSection {
