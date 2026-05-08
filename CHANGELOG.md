@@ -1,9 +1,20 @@
 # CHANGELOG
 
 
+## <small>7.1.2 (2026-05-08)</small>
+
+* release: v7.1.2 ([09949a7](https://github.com/mx-space/mx-admin/commit/09949a7))
+* feat: enrichment support ([8c9bb61](https://github.com/mx-space/mx-admin/commit/8c9bb61))
+* chore(deps): bump @haklex/* to 0.4.1 ([df02505](https://github.com/mx-space/mx-admin/commit/df02505))
+
+## <small>7.1.1 (2026-05-07)</small>
+
+* chore: release v7.1.1 ([98f2b92](https://github.com/mx-space/mx-admin/commit/98f2b92))
+* feat(enrichment): surface per-locale cache rows + locale-aware refresh ([814a143](https://github.com/mx-space/mx-admin/commit/814a143))
+
 ## 7.1.0 (2026-05-07)
 
-* release: v7.1.0 ([4a00487](https://github.com/mx-space/mx-admin/commit/4a00487))
+* release: v7.1.0 ([a51228a](https://github.com/mx-space/mx-admin/commit/a51228a))
 * feat: add specs for charts, views migration, and table effort ([af0df1c](https://github.com/mx-space/mx-admin/commit/af0df1c))
 * feat(enrichment): admin enrichment view + readiness-driven status bar ([46c69e2](https://github.com/mx-space/mx-admin/commit/46c69e2))
 * chore: round favicon corners ([70b6c55](https://github.com/mx-space/mx-admin/commit/70b6c55))
