@@ -1,6 +1,10 @@
 # CHANGELOG
 
 
+## <small>7.1.4 (2026-05-10)</small>
+
+* fix(admin): align field names with backend *At rename ([6f81a3f](https://github.com/mx-space/mx-admin/commit/6f81a3f))
+
 ## <small>7.1.3 (2026-05-09)</small>
 
 * release: v7.1.3 ([eb2808a](https://github.com/mx-space/mx-admin/commit/eb2808a))

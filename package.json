@@ -1,7 +1,7 @@
 {
   "name": "mx-admin-monorepo",
   "private": true,
-  "version": "7.1.3",
+  "version": "7.1.4",
   "bump": {
     "before": [
       "git pull --rebase"
