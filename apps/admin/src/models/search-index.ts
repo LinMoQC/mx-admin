@@ -28,8 +28,6 @@ export interface SearchDocumentAdminRow {
   hasPassword: boolean
   modifiedAt: string
   createdAt: string
-  inSync: boolean
-  availableLangs: string[]
 }
 
 export interface SearchDocumentAdminListResponse {

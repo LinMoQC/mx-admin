@@ -1,7 +1,12 @@
 import type {
   EnrichmentListResponse,
+  EnrichmentProbeResult,
   EnrichmentProviderMeta,
   EnrichmentResult,
+  EnrichmentRowDetail,
+  EnrichmentScreenshot,
+  EnrichmentScreenshotListResponse,
+  EnrichmentScreenshotQuota,
 } from '~/models/enrichment'
 
 import { request } from '~/utils/request'
@@ -57,4 +62,50 @@ export const enrichmentApi = {
         params: locale !== undefined ? { lang: locale } : undefined,
       },
     ),
+
+  byId: (id: string) =>
+    request.get<EnrichmentRowDetail>(`/enrichment/admin/by-id/${encodeId(id)}`),
+
+  screenshots: {
+    list: (
+      params: {
+        page?: number
+        size?: number
+        sort?: 'last_accessed' | 'created' | 'bytes'
+        order?: 'asc' | 'desc'
+      } = {},
+    ) => {
+      const { sort = 'last_accessed', order = 'desc', ...rest } = params
+      return request.get<EnrichmentScreenshotListResponse>(
+        '/enrichment/admin/screenshots',
+        {
+          params: {
+            ...rest,
+            sort,
+            order,
+          },
+        },
+      )
+    },
+
+    quota: () =>
+      request.get<EnrichmentScreenshotQuota>(
+        '/enrichment/admin/screenshots/quota',
+      ),
+
+    delete: (enrichmentId: string) =>
+      request.delete<void>(
+        `/enrichment/admin/screenshots/${encodeId(enrichmentId)}`,
+      ),
+
+    recapture: (enrichmentId: string) =>
+      request.post<EnrichmentScreenshot>(
+        `/enrichment/admin/screenshots/${encodeId(enrichmentId)}/recapture`,
+      ),
+  },
+
+  probe: (url: string, useCache?: boolean) =>
+    request.post<EnrichmentProbeResult>('/enrichment/admin/probe', {
+      data: { url, ...(useCache !== undefined ? { useCache } : {}) },
+    }),
 }

@@ -15,7 +15,21 @@ export interface EnrichmentAttribute {
   format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
 }
 
+export interface EnrichmentScreenshotPalette {
+  dominant: string
+  swatches?: string[]
+}
+
+export interface EnrichmentScreenshot {
+  url: string
+  width: number
+  height: number
+  blurhash?: string
+  palette?: EnrichmentScreenshotPalette
+}
+
 export interface EnrichmentResult {
+  id?: string
   title: string
   description?: string
   image?: EnrichmentImage
@@ -27,6 +41,7 @@ export interface EnrichmentResult {
   attributes?: EnrichmentAttribute[]
   color?: string
   links?: Array<{ rel: string; url: string; label?: string }>
+  screenshot?: EnrichmentScreenshot
 }
 
 export interface EnrichmentRow {
@@ -52,6 +67,55 @@ export interface EnrichmentRow {
 export interface EnrichmentListResponse {
   data: EnrichmentRow[]
   pagination: Pager
+}
+
+export interface EnrichmentScreenshotRow {
+  enrichmentId: string
+  objectKey: string
+  bytes: number
+  width: number
+  height: number
+  blurhash: string | null
+  palette: EnrichmentScreenshotPalette | null
+  createdAt: string
+  lastAccessedAt: string
+}
+
+export interface EnrichmentScreenshotJoinedRow extends EnrichmentScreenshotRow {
+  provider: string
+  externalId: string
+  url: string
+  title: string
+  publicUrl: string
+}
+
+export interface EnrichmentScreenshotListResponse {
+  data: EnrichmentScreenshotJoinedRow[]
+  pagination: Pager
+}
+
+export interface EnrichmentScreenshotQuota {
+  used: { count: number; totalBytes: number }
+  cap: { maxItems: number; maxTotalBytes: number }
+  enabled: boolean
+  fetchMode: 'fetch' | 'browser'
+}
+
+export interface EnrichmentRowDetail extends EnrichmentRow {
+  screenshot: EnrichmentScreenshotRow | null
+}
+
+export type EnrichmentProbeErrorCode =
+  | 'unknown_provider'
+  | 'token_missing'
+  | 'provider_disabled'
+  | 'fetch_failed'
+
+export interface EnrichmentProbeResult {
+  matched: { provider: string; externalId: string } | null
+  result: EnrichmentResult | null
+  cached: boolean
+  error?: { code: EnrichmentProbeErrorCode; message: string }
 }
 
 export interface EnrichmentProviderMeta {

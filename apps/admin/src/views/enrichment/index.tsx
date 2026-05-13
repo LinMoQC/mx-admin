@@ -1,235 +1,434 @@
 import {
-  AlertCircle as AlertCircleIcon,
-  CheckCircle2 as CheckIcon,
-  ExternalLink as ExternalLinkIcon,
+  Eraser as EraserIcon,
   Loader2 as LoaderIcon,
-  AlertTriangle as MissingIcon,
-  CircleSlash as OffIcon,
   RefreshCw as RefreshIcon,
-  RotateCcw as RetryIcon,
-  Trash2 as TrashIcon,
+  DatabaseZap as SelectIcon,
 } from 'lucide-vue-next'
-import {
-  NButton,
-  NPagination,
-  NPopconfirm,
-  NScrollbar,
-  NTag,
-  NTooltip,
-} from 'naive-ui'
-import { computed, defineComponent, ref, watchEffect } from 'vue'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
-import type { EnrichmentProviderMeta, EnrichmentRow } from '~/models/enrichment'
+import { computed, defineComponent, ref, watch, watchEffect } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import type {
+  EnrichmentRow,
+  EnrichmentScreenshotJoinedRow,
+  EnrichmentScreenshotListResponse,
+} from '~/models/enrichment'
 import type { PropType } from 'vue'
+import type { CacheFilterMode } from './components/cache/cache-list'
+import type { ProbeHistoryEntry } from './components/probe/types'
+import type {
+  ScreenshotOrder,
+  ScreenshotSort,
+} from './components/screenshots/screenshot-list'
+import type { EnrichmentSource } from './components/source-switcher'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 
 import { enrichmentApi } from '~/api/enrichment'
 import { HeaderActionButton } from '~/components/button/header-action-button'
-import { RelativeTime } from '~/components/time/relative-time'
+import { MasterDetailLayout, useMasterDetailLayout } from '~/components/layout'
 import { queryKeys } from '~/hooks/queries/keys'
-import { useLayout } from '~/hooks/use-layout'
+import { useLayout } from '~/layouts/content'
 import { RouteName } from '~/router/name'
 
-type FilterMode = 'all' | 'failed'
+import { CacheDetailPanel } from './components/cache/cache-detail-panel'
+import { CacheList } from './components/cache/cache-list'
+import { ProbeConsole } from './components/probe/probe-console'
+import { ProbeList } from './components/probe/probe-list'
+import { ProvidersStatusBar } from './components/providers-status-bar'
+import { ScreenshotDetailPanel } from './components/screenshots/screenshot-detail-panel'
+import { ScreenshotList } from './components/screenshots/screenshot-list'
+import { ScreenshotQuotaChip } from './components/screenshots/screenshot-quota-chip'
+import { SourceSwitcher } from './components/source-switcher'
+
+const isEnrichmentSource = (v: unknown): v is EnrichmentSource =>
+  v === 'cache' || v === 'screenshots' || v === 'probe'
+
+const PROBE_HISTORY_MAX = 20
 
 export default defineComponent({
   name: 'EnrichmentPage',
   setup() {
+    const router = useRouter()
+    const route = useRoute()
     const queryClient = useQueryClient()
-    const pageRef = ref(1)
-    const sizeRef = ref(20)
-    const filterMode = ref<FilterMode>('all')
+    const { setActions } = useLayout()
+    const { isMobile } = useMasterDetailLayout()
 
-    const { data, isPending, isFetching, refetch } = useQuery({
-      queryKey: computed(() =>
-        queryKeys.enrichment.list({
-          page: pageRef.value,
-          size: sizeRef.value,
-          onlyFailed: filterMode.value === 'failed',
-        }),
-      ),
+    const initialSource = isEnrichmentSource(route.query.source)
+      ? route.query.source
+      : 'cache'
+    const source = ref<EnrichmentSource>(initialSource)
+    const selectedId = ref<string | null>((route.query.id as string) || null)
+    const probeSelectedId = ref<string | null>(null)
+    const showDetailOnMobile = ref(false)
+
+    const cachePage = ref(1)
+    const cacheSize = ref(20)
+    const filterMode = ref<CacheFilterMode>('all')
+
+    const screenshotPage = ref(1)
+    const screenshotSize = ref(20)
+    const screenshotSort = ref<ScreenshotSort>('last_accessed')
+    const screenshotOrder = ref<ScreenshotOrder>('desc')
+
+    const probeHistory = ref<ProbeHistoryEntry[]>([])
+
+    const cacheListEnabled = computed(() => source.value === 'cache')
+    const cacheParams = computed(() => ({
+      page: cachePage.value,
+      size: cacheSize.value,
+      onlyFailed: filterMode.value === 'failed',
+    }))
+
+    const {
+      data: cacheData,
+      isPending: cachePending,
+      isFetching: cacheFetching,
+      refetch: refetchCache,
+    } = useQuery({
+      queryKey: computed(() => queryKeys.enrichment.list(cacheParams.value)),
       queryFn: () =>
         enrichmentApi.list({
-          page: pageRef.value,
-          size: sizeRef.value,
+          page: cachePage.value,
+          size: cacheSize.value,
           onlyFailed: filterMode.value === 'failed' ? true : undefined,
         }),
       placeholderData: (prev) => prev,
+      enabled: cacheListEnabled,
     })
 
-    const rows = computed<EnrichmentRow[]>(() => data.value?.data || [])
-    const total = computed(() => data.value?.pagination.total || 0)
-    const pageCount = computed(() => data.value?.pagination.totalPage || 1)
+    const cacheRows = computed<EnrichmentRow[]>(
+      () => cacheData.value?.data || [],
+    )
+    const cacheTotal = computed(() => cacheData.value?.pagination.total || 0)
+    const cachePageCount = computed(
+      () => cacheData.value?.pagination.totalPage || 1,
+    )
 
-    const refreshMutation = useMutation({
-      mutationFn: ({
-        provider,
-        externalId,
-        locale,
-      }: {
-        provider: string
-        externalId: string
-        locale: string
-      }) => enrichmentApi.refresh(provider, externalId, locale || undefined),
-      onSuccess: () => {
-        toast.success('已刷新')
-        queryClient.invalidateQueries({ queryKey: queryKeys.enrichment.all })
-      },
-      onError: (e: any) => {
-        toast.error(e?.message || '刷新失败')
-      },
+    const screenshotsEnabled = computed(() => source.value === 'screenshots')
+
+    const { data: quotaData, refetch: refetchQuota } = useQuery({
+      queryKey: queryKeys.enrichment.screenshots.quota(),
+      queryFn: () => enrichmentApi.screenshots.quota(),
+      enabled: screenshotsEnabled,
+      staleTime: 30_000,
     })
 
-    const invalidateMutation = useMutation({
-      mutationFn: ({
-        provider,
-        externalId,
-      }: {
-        provider: string
-        externalId: string
-      }) => enrichmentApi.invalidate(provider, externalId),
-      onSuccess: () => {
-        toast.success('已失效')
-        queryClient.invalidateQueries({ queryKey: queryKeys.enrichment.all })
-      },
-      onError: (e: any) => {
-        toast.error(e?.message || '失效失败')
-      },
+    const cacheFallback = computed<EnrichmentRow | null>(() => {
+      if (source.value !== 'cache' || !selectedId.value) return null
+      return cacheRows.value.find((r) => r.id === selectedId.value) ?? null
     })
 
-    const { setActions } = useLayout()
-    watchEffect(() => {
-      setActions(
-        <div class="flex items-center gap-2">
-          <span class="hidden text-xs tabular-nums text-neutral-500 md:inline">
-            共 {total.value} 条
-          </span>
-          <HeaderActionButton
-            icon={
-              isFetching.value ? (
-                <LoaderIcon class="animate-spin" />
-              ) : (
-                <RefreshIcon />
-              )
-            }
-            name="刷新"
-            onClick={() => refetch()}
-          />
-        </div>,
+    const selectedScreenshot = computed<EnrichmentScreenshotJoinedRow | null>(
+      () => {
+        if (source.value !== 'screenshots' || !selectedId.value) return null
+        const queries =
+          queryClient.getQueriesData<EnrichmentScreenshotListResponse>({
+            queryKey: queryKeys.enrichment.screenshots.all(),
+          })
+        for (const [, cached] of queries) {
+          const hit = cached?.data?.find(
+            (r) => r.enrichmentId === selectedId.value,
+          )
+          if (hit) return hit
+        }
+        return null
+      },
+    )
+
+    const selectedProbe = computed<ProbeHistoryEntry | null>(() => {
+      if (source.value !== 'probe' || !probeSelectedId.value) return null
+      return (
+        probeHistory.value.find((e) => e.id === probeSelectedId.value) ?? null
       )
     })
 
-    return () => (
-      <div class="flex h-full flex-col">
-        <NScrollbar class="min-h-0 flex-1">
-          <div class="space-y-4 p-4">
-            <ProvidersStatusBar />
+    const handleCacheSelect = (row: EnrichmentRow) => {
+      selectedId.value = row.id
+      if (isMobile.value) showDetailOnMobile.value = true
+    }
 
-            <div class="flex items-center gap-2">
-              <FilterSegment
-                value={filterMode.value}
-                onChange={(v) => {
-                  filterMode.value = v
-                  pageRef.value = 1
-                }}
-              />
-            </div>
+    const handleScreenshotSelect = (row: EnrichmentScreenshotJoinedRow) => {
+      selectedId.value = row.enrichmentId
+      if (isMobile.value) showDetailOnMobile.value = true
+    }
 
-            {isPending.value && rows.value.length === 0 ? (
-              <div class="flex items-center justify-center py-16">
-                <LoaderIcon class="size-5 animate-spin text-neutral-400" />
-              </div>
-            ) : rows.value.length === 0 ? (
-              <EmptyState filtered={filterMode.value === 'failed'} />
-            ) : (
-              <div class="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <table class="w-full text-sm">
-                  <thead class="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
-                    <tr>
-                      <th class="px-3 py-2 text-left font-medium">Provider</th>
-                      <th class="px-3 py-2 text-left font-medium">标题</th>
-                      <th class="px-3 py-2 text-left font-medium">外部 ID</th>
-                      <th class="px-3 py-2 text-left font-medium">语言</th>
-                      <th class="px-3 py-2 text-left font-medium">抓取于</th>
-                      <th class="px-3 py-2 text-left font-medium">失败</th>
-                      <th class="px-3 py-2 text-right font-medium">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
-                    {rows.value.map((row) => (
-                      <EnrichmentRowItem
-                        key={row.id}
-                        row={row}
-                        refreshing={
-                          refreshMutation.isPending.value &&
-                          refreshMutation.variables.value?.provider ===
-                            row.provider &&
-                          refreshMutation.variables.value?.externalId ===
-                            row.externalId &&
-                          refreshMutation.variables.value?.locale === row.locale
-                        }
-                        onRefresh={() =>
-                          refreshMutation.mutate({
-                            provider: row.provider,
-                            externalId: row.externalId,
-                            locale: row.locale,
-                          })
-                        }
-                        onInvalidate={() =>
-                          invalidateMutation.mutate({
-                            provider: row.provider,
-                            externalId: row.externalId,
-                          })
-                        }
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </NScrollbar>
+    const handleBack = () => {
+      showDetailOnMobile.value = false
+    }
 
-        {pageCount.value > 1 && (
-          <div class="flex shrink-0 items-center justify-end border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <NPagination
-              page={pageRef.value}
-              pageCount={pageCount.value}
-              pageSize={sizeRef.value}
-              onUpdatePage={(p) => (pageRef.value = p)}
-              showSizePicker
-              pageSizes={[10, 20, 50, 100]}
-              onUpdatePageSize={(s) => {
-                sizeRef.value = s
-                pageRef.value = 1
+    const handleSourceChange = (next: EnrichmentSource) => {
+      if (source.value === next) return
+      source.value = next
+      selectedId.value = null
+      if (next !== 'probe') probeSelectedId.value = null
+      showDetailOnMobile.value = false
+    }
+
+    const handleFilterChange = (next: CacheFilterMode) => {
+      filterMode.value = next
+      cachePage.value = 1
+    }
+
+    const handleJumpToScreenshot = (enrichmentId: string) => {
+      source.value = 'screenshots'
+      selectedId.value = enrichmentId
+      if (isMobile.value) showDetailOnMobile.value = true
+    }
+
+    const handleScreenshotDeleted = (enrichmentId: string) => {
+      if (selectedId.value === enrichmentId) {
+        selectedId.value = null
+        showDetailOnMobile.value = false
+      }
+    }
+
+    const pushProbeEntry = (entry: ProbeHistoryEntry) => {
+      probeHistory.value.unshift(entry)
+      if (probeHistory.value.length > PROBE_HISTORY_MAX) {
+        probeHistory.value.splice(PROBE_HISTORY_MAX)
+      }
+      probeSelectedId.value = entry.id
+      if (isMobile.value) showDetailOnMobile.value = true
+    }
+
+    const handleProbeSelect = (entry: ProbeHistoryEntry) => {
+      probeSelectedId.value = entry.id
+      if (isMobile.value) showDetailOnMobile.value = true
+    }
+
+    const handleProbeNew = () => {
+      probeSelectedId.value = null
+    }
+
+    const handleClearProbe = () => {
+      probeHistory.value = []
+      probeSelectedId.value = null
+    }
+
+    watch(
+      [source, selectedId],
+      ([s, id]) => {
+        const query: Record<string, string> = {}
+        if (s !== 'cache') query.source = s
+        if (id && s !== 'probe') query.id = id
+        router.replace({
+          name: RouteName.Enrichment,
+          query,
+        })
+      },
+      { flush: 'post' },
+    )
+
+    watch(
+      () => selectedId.value,
+      (id) => {
+        if (id && isMobile.value) showDetailOnMobile.value = true
+        if (!id && source.value !== 'probe') showDetailOnMobile.value = false
+      },
+    )
+
+    watch(probeSelectedId, (id) => {
+      if (source.value !== 'probe') return
+      if (id && isMobile.value) showDetailOnMobile.value = true
+    })
+
+    watchEffect(() => {
+      if (source.value === 'cache') {
+        setActions(
+          <div class="flex items-center gap-2">
+            <span class="hidden text-xs tabular-nums text-neutral-500 md:inline">
+              共 {cacheTotal.value} 条
+            </span>
+            <HeaderActionButton
+              icon={
+                cacheFetching.value ? (
+                  <LoaderIcon class="animate-spin" />
+                ) : (
+                  <RefreshIcon />
+                )
+              }
+              name="刷新"
+              onClick={() => refetchCache()}
+            />
+          </div>,
+        )
+      } else if (source.value === 'screenshots') {
+        setActions(
+          <div class="flex items-center gap-2">
+            <span class="hidden md:inline">
+              <ScreenshotQuotaChip quota={quotaData.value ?? null} />
+            </span>
+            <HeaderActionButton
+              icon={<RefreshIcon />}
+              name="刷新"
+              onClick={() => {
+                queryClient.invalidateQueries({
+                  queryKey: queryKeys.enrichment.screenshots.all(),
+                })
+                refetchQuota()
               }}
             />
-          </div>
-        )}
-      </div>
+          </div>,
+        )
+      } else {
+        setActions(
+          <HeaderActionButton
+            icon={<EraserIcon />}
+            name="清空历史"
+            onClick={handleClearProbe}
+            disabled={probeHistory.value.length === 0}
+          />,
+        )
+      }
+    })
+
+    const masterDetailSize = computed(() =>
+      source.value === 'probe'
+        ? { defaultSize: 0.25, min: 0.2, max: 0.35 }
+        : { defaultSize: 0.35, min: 0.25, max: 0.5 },
+    )
+
+    return () => (
+      <MasterDetailLayout
+        showDetailOnMobile={showDetailOnMobile.value}
+        defaultSize={masterDetailSize.value.defaultSize}
+        min={masterDetailSize.value.min}
+        max={masterDetailSize.value.max}
+      >
+        {{
+          list: () => (
+            <div class="flex h-full flex-col">
+              <div class="flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+                <SourceSwitcher
+                  value={source.value}
+                  onChange={handleSourceChange}
+                />
+                {source.value === 'cache' && (
+                  <>
+                    <ProvidersStatusBar />
+                    <FilterSegment
+                      value={filterMode.value}
+                      onChange={handleFilterChange}
+                    />
+                  </>
+                )}
+              </div>
+
+              <div class="min-h-0 flex-1">
+                {source.value === 'cache' && (
+                  <CacheList
+                    rows={cacheRows.value}
+                    loading={cachePending.value}
+                    selectedId={selectedId.value}
+                    filterMode={filterMode.value}
+                    page={cachePage.value}
+                    pageCount={cachePageCount.value}
+                    pageSize={cacheSize.value}
+                    onSelect={handleCacheSelect}
+                    onPageChange={(p) => (cachePage.value = p)}
+                    onPageSizeChange={(s) => {
+                      cacheSize.value = s
+                      cachePage.value = 1
+                    }}
+                  />
+                )}
+                {source.value === 'screenshots' && (
+                  <ScreenshotList
+                    page={screenshotPage.value}
+                    pageSize={screenshotSize.value}
+                    sort={screenshotSort.value}
+                    order={screenshotOrder.value}
+                    selectedId={selectedId.value}
+                    quota={quotaData.value ?? null}
+                    onSelect={handleScreenshotSelect}
+                    onPageChange={(p) => (screenshotPage.value = p)}
+                    onPageSizeChange={(s) => {
+                      screenshotSize.value = s
+                      screenshotPage.value = 1
+                    }}
+                    onSortChange={(v) => {
+                      screenshotSort.value = v
+                      screenshotPage.value = 1
+                    }}
+                    onOrderChange={(v) => {
+                      screenshotOrder.value = v
+                      screenshotPage.value = 1
+                    }}
+                  />
+                )}
+                {source.value === 'probe' && (
+                  <ProbeList
+                    history={probeHistory.value}
+                    selectedId={probeSelectedId.value}
+                    onSelect={handleProbeSelect}
+                    onNew={handleProbeNew}
+                  />
+                )}
+              </div>
+            </div>
+          ),
+          detail: () => {
+            if (source.value === 'cache' && selectedId.value) {
+              return (
+                <CacheDetailPanel
+                  id={selectedId.value}
+                  fallback={cacheFallback.value}
+                  isMobile={isMobile.value}
+                  onBack={handleBack}
+                  onJumpToScreenshot={handleJumpToScreenshot}
+                />
+              )
+            }
+            if (source.value === 'screenshots' && selectedScreenshot.value) {
+              return (
+                <ScreenshotDetailPanel
+                  row={selectedScreenshot.value}
+                  quota={quotaData.value ?? null}
+                  isMobile={isMobile.value}
+                  onBack={handleBack}
+                  onDeleted={handleScreenshotDeleted}
+                />
+              )
+            }
+            if (source.value === 'probe') {
+              return (
+                <ProbeConsole
+                  selectedEntry={selectedProbe.value}
+                  isMobile={isMobile.value}
+                  onBack={handleBack}
+                  onProbed={pushProbeEntry}
+                  onNew={handleProbeNew}
+                />
+              )
+            }
+            return null
+          },
+          empty: () => <DetailEmptyState />,
+        }}
+      </MasterDetailLayout>
     )
   },
 })
 
-// ======================== Filter segment ========================
-
 const FilterSegment = defineComponent({
+  name: 'CacheFilterSegment',
   props: {
-    value: { type: String as PropType<FilterMode>, required: true },
+    value: {
+      type: String as PropType<CacheFilterMode>,
+      required: true,
+    },
     onChange: {
-      type: Function as PropType<(v: FilterMode) => void>,
+      type: Function as PropType<(v: CacheFilterMode) => void>,
       required: true,
     },
   },
   setup(props) {
-    const items: Array<{ key: FilterMode; label: string }> = [
+    const items: Array<{ key: CacheFilterMode; label: string }> = [
       { key: 'all', label: '全部' },
       { key: 'failed', label: '仅失败' },
     ]
     return () => (
-      <div class="inline-flex items-center gap-0.5 rounded-md border border-neutral-200 p-0.5 dark:border-neutral-800">
+      <div class="inline-flex items-center gap-0.5 self-start rounded-md border border-neutral-200 p-0.5 dark:border-neutral-800">
         {items.map((it) => {
           const active = props.value === it.key
           return (
@@ -253,340 +452,18 @@ const FilterSegment = defineComponent({
   },
 })
 
-// ======================== Providers status bar ========================
-
-type ProviderState = 'ok' | 'missing' | 'disabled'
-
-const SELF_GROUP_KEY = '__self__'
-
-// Display label per gate section. Backend keys (`thirdPartyServiceIntegration`
-// section names) are stable; this map only handles presentation.
-const configKeyLabel: Record<string, string> = {
-  github: 'GitHub',
-  tmdb: 'TMDB',
-  bangumi: 'Bangumi',
-  neodb: 'NeoDB',
-  arxiv: 'Arxiv',
-  leetcode: 'LeetCode',
-  neteaseMusic: '网易云',
-  qqMusic: 'QQ 音乐',
-}
-
-const ProvidersStatusBar = defineComponent({
+const DetailEmptyState = defineComponent({
+  name: 'EnrichmentDetailEmptyState',
   setup() {
-    const router = useRouter()
-
-    const { data: providers } = useQuery({
-      queryKey: queryKeys.enrichment.providers(),
-      queryFn: () => enrichmentApi.providers(),
-      staleTime: 60_000,
-    })
-
-    // Group by `featureGateConfigKey` and derive state directly from the
-    // server-computed `enabled` / `ready` / `missingKeys`. The dashboard no
-    // longer mirrors backend gate-mapping logic — readiness is one source.
-    const groups = computed(() => {
-      const list = providers.value || []
-      const byGate = new Map<
-        string,
-        {
-          configKey: string
-          label: string
-          state: ProviderState
-          providers: EnrichmentProviderMeta[]
-          missingKeys: string[]
-        }
-      >()
-
-      for (const p of list) {
-        const configKey = p.featureGateConfigKey ?? SELF_GROUP_KEY
-        const existing = byGate.get(configKey)
-        if (existing) {
-          existing.providers.push(p)
-          // Promote to worst state across providers in the same group.
-          if (existing.state === 'ok') {
-            if (!p.enabled) existing.state = 'disabled'
-            else if (!p.ready) existing.state = 'missing'
-          } else if (existing.state === 'missing' && !p.enabled) {
-            existing.state = 'disabled'
-          }
-          for (const k of p.missingKeys ?? [])
-            if (!existing.missingKeys.includes(k)) existing.missingKeys.push(k)
-          continue
-        }
-        const state: ProviderState =
-          configKey === SELF_GROUP_KEY
-            ? 'ok'
-            : !p.enabled
-              ? 'disabled'
-              : !p.ready
-                ? 'missing'
-                : 'ok'
-        byGate.set(configKey, {
-          configKey,
-          label:
-            configKey === SELF_GROUP_KEY
-              ? '本站'
-              : (configKeyLabel[configKey] ?? configKey),
-          state,
-          providers: [p],
-          missingKeys: [...(p.missingKeys ?? [])],
-        })
-      }
-
-      return Array.from(byGate.values())
-    })
-
-    const handleClick = (configKey: string) => {
-      if (configKey === SELF_GROUP_KEY) return
-      router.push({
-        name: RouteName.Setting,
-        query: { group: 'integrations' },
-      })
-    }
-
-    return () => {
-      if (!providers.value || providers.value.length === 0) return null
-      return (
-        <div class="flex flex-wrap gap-1.5">
-          {groups.value.map((g) => (
-            <ProviderChip
-              key={g.configKey}
-              label={g.label}
-              state={g.state}
-              providers={g.providers}
-              missingHint={
-                g.state === 'missing'
-                  ? `缺 ${g.missingKeys.length > 0 ? g.missingKeys.join(', ') : '凭证'}`
-                  : undefined
-              }
-              onClick={() => handleClick(g.configKey)}
-              clickable={g.configKey !== SELF_GROUP_KEY}
-            />
-          ))}
-        </div>
-      )
-    }
-  },
-})
-
-const ProviderChip = defineComponent({
-  props: {
-    label: { type: String, required: true },
-    state: { type: String as PropType<ProviderState>, required: true },
-    providers: {
-      type: Array as PropType<EnrichmentProviderMeta[]>,
-      required: true,
-    },
-    missingHint: String,
-    clickable: { type: Boolean, default: true },
-    onClick: Function as PropType<() => void>,
-  },
-  setup(props) {
-    const stateConfig = computed(() => {
-      switch (props.state) {
-        case 'ok':
-          return {
-            cls: 'border-green-200 bg-green-50 text-green-700 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-400',
-            Icon: CheckIcon,
-          }
-        case 'missing':
-          return {
-            cls: 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-400',
-            Icon: MissingIcon,
-          }
-        case 'disabled':
-          return {
-            cls: 'border-neutral-200 bg-neutral-50 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-500',
-            Icon: OffIcon,
-          }
-      }
-    })
-    return () => {
-      const sc = stateConfig.value
-      const tooltipLines = [
-        ...props.providers.map((p) => {
-          const localeNote =
-            p.localeAware && p.supportedLocales?.length
-              ? ` (i18n: ${p.supportedLocales.join('/')})`
-              : ''
-          return `· ${p.displayName}${localeNote}`
-        }),
-        ...(props.missingHint ? ['', props.missingHint] : []),
-      ]
-      const hasI18n = props.providers.some((p) => p.localeAware === true)
-      const chip = (
-        <button
-          type="button"
-          class={[
-            'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-opacity',
-            sc.cls,
-            props.clickable
-              ? 'cursor-pointer hover:opacity-80'
-              : 'cursor-default',
-          ]}
-          onClick={() => props.clickable && props.onClick?.()}
-        >
-          <sc.Icon class="size-3" aria-hidden="true" />
-          <span class="font-medium">{props.label}</span>
-          {hasI18n && (
-            <span
-              class="text-[10px] text-neutral-500 dark:text-neutral-400"
-              title="支持多语言"
-            >
-              i18n
-            </span>
-          )}
-          {props.missingHint && (
-            <span class="text-yellow-600 dark:text-yellow-500">⚠</span>
-          )}
-        </button>
-      )
-      return (
-        <NTooltip trigger="hover" placement="top">
-          {{
-            trigger: () => chip,
-            default: () => (
-              <div class="text-xs">
-                {tooltipLines.map((l, i) => (
-                  <div key={i}>{l || ' '}</div>
-                ))}
-              </div>
-            ),
-          }}
-        </NTooltip>
-      )
-    }
-  },
-})
-
-// ======================== List item & empty ========================
-
-const EmptyState = defineComponent({
-  props: { filtered: { type: Boolean, default: false } },
-  setup(props) {
     return () => (
-      <div class="flex flex-col items-center justify-center py-16">
-        <AlertCircleIcon
-          class="mb-3 size-10 text-neutral-300 dark:text-neutral-600"
-          aria-hidden="true"
-        />
+      <div class="flex h-full flex-col items-center justify-center bg-neutral-50 text-center dark:bg-neutral-950">
+        <div class="mb-4 flex size-16 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+          <SelectIcon class="size-8 text-neutral-400" />
+        </div>
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
-          {props.filtered ? '无失败项' : '暂无 enrichment 缓存'}
+          请从左侧选择
         </p>
       </div>
     )
-  },
-})
-
-const EnrichmentRowItem = defineComponent({
-  props: {
-    row: { type: Object as PropType<EnrichmentRow>, required: true },
-    refreshing: { type: Boolean, default: false },
-    onRefresh: { type: Function as PropType<() => void>, required: true },
-    onInvalidate: { type: Function as PropType<() => void>, required: true },
-  },
-  setup(props) {
-    return () => {
-      const { row } = props
-      const hasFailures = row.failureCount > 0
-      return (
-        <tr class="transition-colors hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40">
-          <td class="px-3 py-2 align-top">
-            <NTag size="small" type="info">
-              {row.provider}
-            </NTag>
-            <div class="mt-1 text-xs text-neutral-400">
-              {row.normalized.category}
-              {row.normalized.subtype ? ` · ${row.normalized.subtype}` : ''}
-            </div>
-          </td>
-          <td class="px-3 py-2 align-top">
-            <a
-              href={row.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-neutral-900 hover:underline dark:text-neutral-100"
-            >
-              <span class="line-clamp-1 max-w-[28ch]">
-                {row.normalized.title}
-              </span>
-              <ExternalLinkIcon
-                class="size-3 shrink-0 text-neutral-400"
-                aria-hidden="true"
-              />
-            </a>
-          </td>
-          <td class="px-3 py-2 align-top">
-            <code class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs dark:bg-neutral-800">
-              {row.externalId}
-            </code>
-          </td>
-          <td class="px-3 py-2 align-top">
-            {row.locale ? (
-              <NTag size="small" type="default">
-                {row.locale}
-              </NTag>
-            ) : (
-              <span class="text-xs text-neutral-400">默认</span>
-            )}
-          </td>
-          <td class="px-3 py-2 align-top text-xs text-neutral-500">
-            <RelativeTime time={new Date(row.fetchedAt)} />
-          </td>
-          <td class="px-3 py-2 align-top">
-            {hasFailures ? (
-              <NTag size="small" type="warning">
-                {row.failureCount}
-              </NTag>
-            ) : (
-              <span class="text-xs text-neutral-400">—</span>
-            )}
-            {row.lastError && (
-              <div
-                class="mt-1 line-clamp-1 max-w-[24ch] text-xs text-red-500"
-                title={row.lastError}
-              >
-                {row.lastError}
-              </div>
-            )}
-          </td>
-          <td class="px-3 py-2 text-right align-top">
-            <div class="flex justify-end gap-1">
-              <NButton
-                size="tiny"
-                secondary
-                loading={props.refreshing}
-                onClick={() => props.onRefresh()}
-              >
-                {{
-                  icon: () => <RetryIcon class="size-3" aria-hidden="true" />,
-                  default: () => '刷新',
-                }}
-              </NButton>
-              <NPopconfirm
-                positiveText="保留"
-                negativeText="失效"
-                onNegativeClick={() => props.onInvalidate()}
-              >
-                {{
-                  trigger: () => (
-                    <NButton size="tiny" type="error" tertiary>
-                      {{
-                        icon: () => (
-                          <TrashIcon class="size-3" aria-hidden="true" />
-                        ),
-                        default: () => '失效',
-                      }}
-                    </NButton>
-                  ),
-                  default: () => '将此缓存项失效？',
-                }}
-              </NPopconfirm>
-            </div>
-          </td>
-        </tr>
-      )
-    }
   },
 })

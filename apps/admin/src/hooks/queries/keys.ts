@@ -252,6 +252,19 @@ export const queryKeys = {
     list: (params?: object) =>
       [...queryKeys.enrichment.lists(), params] as const,
     providers: () => [...queryKeys.enrichment.all, 'providers'] as const,
+    byId: (id: string) => [...queryKeys.enrichment.all, 'by-id', id] as const,
+    screenshots: {
+      all: () => [...queryKeys.enrichment.all, 'screenshots'] as const,
+      list: (params?: {
+        page?: number
+        size?: number
+        sort?: 'last_accessed' | 'created' | 'bytes'
+        order?: 'asc' | 'desc'
+      }) =>
+        [...queryKeys.enrichment.screenshots.all(), 'list', params] as const,
+      quota: () =>
+        [...queryKeys.enrichment.screenshots.all(), 'quota'] as const,
+    },
   },
 
   // === 搜索索引 ===
