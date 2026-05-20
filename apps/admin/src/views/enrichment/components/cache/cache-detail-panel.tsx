@@ -148,7 +148,6 @@ export const CacheDetailPanel = defineComponent({
         .filter(Boolean)
         .join(' · ')
       const captureMeta = row.capture
-      const normalizedCapture = row.normalized.captureImage
 
       return (
         <div class="flex h-full flex-col">
@@ -229,21 +228,6 @@ export const CacheDetailPanel = defineComponent({
                 </div>
                 {captureMeta ? (
                   <div class="space-y-2">
-                    {normalizedCapture?.url && (
-                      <a
-                        href={normalizedCapture.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="block max-w-md overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
-                      >
-                        <img
-                          src={normalizedCapture.url}
-                          alt="screenshot"
-                          class="w-full object-cover"
-                          loading="lazy"
-                        />
-                      </a>
-                    )}
                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
                       <span>
                         {captureMeta.width}×{captureMeta.height}

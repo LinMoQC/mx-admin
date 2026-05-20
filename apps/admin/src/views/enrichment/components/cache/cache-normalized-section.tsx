@@ -1,6 +1,12 @@
 import { defineComponent } from 'vue'
-import type { EnrichmentResult } from '~/models/enrichment'
+import type { EnrichmentImage, EnrichmentResult } from '~/models/enrichment'
 import type { PropType } from 'vue'
+
+const IMAGE_FIELDS = [
+  { key: 'thumbnailImage', label: '封面图' },
+  { key: 'previewImage', label: 'OG 预览图' },
+  { key: 'captureImage', label: '截图' },
+] as const
 
 export const CacheNormalizedSection = defineComponent({
   name: 'CacheNormalizedSection',
@@ -11,7 +17,6 @@ export const CacheNormalizedSection = defineComponent({
   setup(props) {
     return () => {
       const { result } = props
-      const image = result.thumbnailImage
       const attributes = result.attributes ?? []
       const links = result.links ?? []
       return (
@@ -30,25 +35,15 @@ export const CacheNormalizedSection = defineComponent({
                 {result.description || '—'}
               </span>
             </Field>
-            <Field label="封面图">
-              {image ? (
-                <a
-                  href={image.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="block max-w-xs overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
-                >
-                  <img
-                    src={image.url}
-                    alt={image.alt || ''}
-                    class="w-full object-cover"
-                    loading="lazy"
-                  />
-                </a>
-              ) : (
-                <span class="text-xs text-neutral-400">无</span>
-              )}
-            </Field>
+            {IMAGE_FIELDS.map(({ key, label }) => {
+              const img = result[key]
+              if (!img?.url) return null
+              return (
+                <Field key={key} label={label}>
+                  <ImagePreview image={img} />
+                </Field>
+              )
+            })}
             {attributes.length > 0 && (
               <Field label="属性">
                 <div class="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
@@ -110,6 +105,30 @@ const Field = defineComponent({
         </div>
         {slots.default?.()}
       </div>
+    )
+  },
+})
+
+const ImagePreview = defineComponent({
+  name: 'ImagePreview',
+  props: {
+    image: { type: Object as PropType<EnrichmentImage>, required: true },
+  },
+  setup(props) {
+    return () => (
+      <a
+        href={props.image.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="block max-w-xs overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
+      >
+        <img
+          src={props.image.url}
+          alt={props.image.alt || ''}
+          class="w-full object-cover"
+          loading="lazy"
+        />
+      </a>
     )
   },
 })
