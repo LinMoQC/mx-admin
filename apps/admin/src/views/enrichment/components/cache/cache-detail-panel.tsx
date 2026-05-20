@@ -55,7 +55,7 @@ export const CacheDetailPanel = defineComponent({
         if (props.fallback && props.fallback.id === props.id) {
           return {
             ...props.fallback,
-            screenshot: null,
+            capture: null,
           } as EnrichmentRowDetail
         }
         return undefined
@@ -92,7 +92,7 @@ export const CacheDetailPanel = defineComponent({
         toast.success('已刷新')
         invalidateRow()
         queryClient.invalidateQueries({
-          queryKey: queryKeys.enrichment.screenshots.all(),
+          queryKey: queryKeys.enrichment.captures.all(),
         })
       },
     })
@@ -147,8 +147,8 @@ export const CacheDetailPanel = defineComponent({
       const subtitle = [row.normalized.category, row.normalized.subtype]
         .filter(Boolean)
         .join(' · ')
-      const screenshotMeta = row.screenshot
-      const normalizedShot = row.normalized.screenshot
+      const captureMeta = row.capture
+      const normalizedCapture = row.normalized.captureImage
 
       return (
         <div class="flex h-full flex-col">
@@ -214,7 +214,7 @@ export const CacheDetailPanel = defineComponent({
                   <h3 class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     截图
                   </h3>
-                  {screenshotMeta && (
+                  {captureMeta && (
                     <NButton
                       size="tiny"
                       secondary
@@ -227,17 +227,17 @@ export const CacheDetailPanel = defineComponent({
                     </NButton>
                   )}
                 </div>
-                {screenshotMeta ? (
+                {captureMeta ? (
                   <div class="space-y-2">
-                    {normalizedShot?.url && (
+                    {normalizedCapture?.url && (
                       <a
-                        href={normalizedShot.url}
+                        href={normalizedCapture.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="block max-w-md overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
                       >
                         <img
-                          src={normalizedShot.url}
+                          src={normalizedCapture.url}
                           alt="screenshot"
                           class="w-full object-cover"
                           loading="lazy"
@@ -246,19 +246,17 @@ export const CacheDetailPanel = defineComponent({
                     )}
                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
                       <span>
-                        {screenshotMeta.width}×{screenshotMeta.height}
+                        {captureMeta.width}×{captureMeta.height}
                       </span>
-                      <span>{formatBytes(screenshotMeta.bytes)}</span>
+                      <span>{formatBytes(captureMeta.bytes)}</span>
                       <span>
                         创建于{' '}
-                        <RelativeTime
-                          time={new Date(screenshotMeta.createdAt)}
-                        />
+                        <RelativeTime time={new Date(captureMeta.createdAt)} />
                       </span>
                       <span>
                         最近访问{' '}
                         <RelativeTime
-                          time={new Date(screenshotMeta.lastAccessedAt)}
+                          time={new Date(captureMeta.lastAccessedAt)}
                         />
                       </span>
                     </div>

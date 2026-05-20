@@ -1,4 +1,11 @@
-import type { Pager } from './base'
+export interface SearchIndexLegacyPager {
+  total: number
+  size: number
+  currentPage: number
+  totalPage: number
+  hasPrevPage: boolean
+  hasNextPage: boolean
+}
 
 export type SearchIndexRefType = 'post' | 'note' | 'page'
 
@@ -32,7 +39,7 @@ export interface SearchDocumentAdminRow {
 
 export interface SearchDocumentAdminListResponse {
   data: SearchDocumentAdminRow[]
-  pagination: Pager
+  pagination: SearchIndexLegacyPager
 }
 
 export interface SearchDocumentAdminListParams {

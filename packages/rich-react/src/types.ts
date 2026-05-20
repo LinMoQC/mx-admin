@@ -11,12 +11,18 @@ export type ImageUpload = NonNullable<ShiroEditorProps['imageUpload']>
 
 export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
 
+export interface EnrichmentImagePalette {
+  dominant: string
+  swatches?: string[]
+}
+
 export interface EnrichmentImage {
   url: string
   width?: number
   height?: number
   alt?: string
   blurhash?: string
+  palette?: EnrichmentImagePalette
 }
 
 export interface EnrichmentAttribute {
@@ -29,7 +35,8 @@ export interface EnrichmentAttribute {
 export interface EnrichmentResult {
   title: string
   description?: string
-  image?: EnrichmentImage
+  thumbnailImage?: EnrichmentImage
+  previewImage?: EnrichmentImage
   url: string
   category: string
   subtype?: string
@@ -38,4 +45,5 @@ export interface EnrichmentResult {
   attributes?: EnrichmentAttribute[]
   color?: string
   links?: Array<{ rel: string; url: string; label?: string }>
+  captureImage?: EnrichmentImage
 }

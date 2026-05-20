@@ -6,7 +6,6 @@ import { request } from '~/utils/request'
 export interface GetPagesParams {
   page?: number
   size?: number
-  select?: string
 }
 
 export interface CreatePageData {

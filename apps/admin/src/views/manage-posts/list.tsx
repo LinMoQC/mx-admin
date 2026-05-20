@@ -203,8 +203,6 @@ export const ManagePostListView = defineComponent({
         return postsApi.getList({
           page: params.page,
           size: params.size,
-          select:
-            'title id createdAt modifiedAt slug categoryId copyright tags readCount likeCount pinAt meta isPublished',
           categoryIds: params.filters?.categoryIds,
           ...(params.sortBy
             ? {
@@ -278,28 +276,31 @@ export const ManagePostListView = defineComponent({
               </div>
             )}
 
-            {pager.value && pager.value.totalPage > 1 && (
+            {pager.value && pager.value.totalPages > 1 && (
               <div class="flex items-center justify-center gap-4 border-t border-neutral-200 py-4 dark:border-neutral-800">
                 <button
                   class="rounded-md border border-neutral-200 px-3 py-1.5 text-sm hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-                  disabled={!pager.value.hasPrevPage}
+                  disabled={pager.value.page <= 1}
                   onClick={() => {
-                    if (pager.value?.hasPrevPage) {
-                      setPage(pager.value.currentPage - 1)
+                    if (pager.value && pager.value.page > 1) {
+                      setPage(pager.value.page - 1)
                     }
                   }}
                 >
                   上一页
                 </button>
                 <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                  {pager.value.currentPage} / {pager.value.totalPage}
+                  {pager.value.page} / {pager.value.totalPages}
                 </span>
                 <button
                   class="rounded-md border border-neutral-200 px-3 py-1.5 text-sm hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-                  disabled={!pager.value.hasNextPage}
+                  disabled={pager.value.page >= pager.value.totalPages}
                   onClick={() => {
-                    if (pager.value?.hasNextPage) {
-                      setPage(pager.value.currentPage + 1)
+                    if (
+                      pager.value &&
+                      pager.value.page < pager.value.totalPages
+                    ) {
+                      setPage(pager.value.page + 1)
                     }
                   }}
                 >

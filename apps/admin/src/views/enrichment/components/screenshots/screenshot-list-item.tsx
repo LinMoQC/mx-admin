@@ -1,6 +1,6 @@
 import { Image as ImageIcon } from 'lucide-vue-next'
 import { defineComponent, ref } from 'vue'
-import type { EnrichmentScreenshotJoinedRow } from '~/models/enrichment'
+import type { EnrichmentCaptureJoinedRow } from '~/models/enrichment'
 import type { PropType } from 'vue'
 
 import { RelativeTime } from '~/components/time/relative-time'
@@ -11,7 +11,7 @@ export const ScreenshotListItem = defineComponent({
   name: 'ScreenshotListItem',
   props: {
     row: {
-      type: Object as PropType<EnrichmentScreenshotJoinedRow>,
+      type: Object as PropType<EnrichmentCaptureJoinedRow>,
       required: true,
     },
     selected: { type: Boolean, default: false },

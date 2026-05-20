@@ -25,8 +25,8 @@ export const createMemoDataListFetchHook = <
       loading.value = false
       data.forEach((i) => idSet.add(i.id))
 
-      currentPage = pagination.currentPage
-      if (!pagination.hasNextPage) {
+      currentPage = pagination.page
+      if (pagination.page >= pagination.totalPages) {
         isEnd = true
       }
     }

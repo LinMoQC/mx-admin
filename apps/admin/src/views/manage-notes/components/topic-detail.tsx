@@ -290,31 +290,34 @@ export const TopicDetailDrawer = defineComponent({
                         ))}
 
                         {notePagination.value &&
-                          notePagination.value.totalPage > 1 && (
+                          notePagination.value.totalPages > 1 && (
                             <div class="flex justify-center gap-2 pt-4">
                               <NButton
                                 size="small"
-                                disabled={!notePagination.value.hasPrevPage}
+                                disabled={notePagination.value.page <= 1}
                                 onClick={() =>
                                   fetchTopicNotes(
                                     props.topicId,
-                                    notePagination.value!.currentPage - 1,
+                                    notePagination.value!.page - 1,
                                   )
                                 }
                               >
                                 上一页
                               </NButton>
                               <span class="flex items-center text-sm text-neutral-500">
-                                {notePagination.value.currentPage} /{' '}
-                                {notePagination.value.totalPage}
+                                {notePagination.value.page} /{' '}
+                                {notePagination.value.totalPages}
                               </span>
                               <NButton
                                 size="small"
-                                disabled={!notePagination.value.hasNextPage}
+                                disabled={
+                                  notePagination.value.page >=
+                                  notePagination.value.totalPages
+                                }
                                 onClick={() =>
                                   fetchTopicNotes(
                                     props.topicId,
-                                    notePagination.value!.currentPage + 1,
+                                    notePagination.value!.page + 1,
                                   )
                                 }
                               >

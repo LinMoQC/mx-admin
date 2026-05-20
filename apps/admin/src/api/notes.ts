@@ -6,7 +6,6 @@ import { request } from '~/utils/request'
 export interface GetNotesParams {
   page?: number
   size?: number
-  select?: string
   sortBy?: string
   sortOrder?: number
   db_query?: Record<string, boolean>

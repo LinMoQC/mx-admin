@@ -8,8 +8,8 @@ import { NButton, NPopconfirm, NScrollbar, NTag, NTooltip } from 'naive-ui'
 import { computed, defineComponent } from 'vue'
 import { toast } from 'vue-sonner'
 import type {
-  EnrichmentScreenshotJoinedRow,
-  EnrichmentScreenshotQuota,
+  EnrichmentCaptureJoinedRow,
+  EnrichmentCaptureQuota,
 } from '~/models/enrichment'
 import type { PropType } from 'vue'
 
@@ -25,11 +25,11 @@ export const ScreenshotDetailPanel = defineComponent({
   name: 'ScreenshotDetailPanel',
   props: {
     row: {
-      type: Object as PropType<EnrichmentScreenshotJoinedRow>,
+      type: Object as PropType<EnrichmentCaptureJoinedRow>,
       required: true,
     },
     quota: {
-      type: Object as PropType<EnrichmentScreenshotQuota | null>,
+      type: Object as PropType<EnrichmentCaptureQuota | null>,
       default: null,
     },
     isMobile: { type: Boolean, default: false },
@@ -45,10 +45,10 @@ export const ScreenshotDetailPanel = defineComponent({
 
     const invalidateAll = () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.enrichment.screenshots.all(),
+        queryKey: queryKeys.enrichment.captures.all(),
       })
       queryClient.invalidateQueries({
-        queryKey: queryKeys.enrichment.screenshots.quota(),
+        queryKey: queryKeys.enrichment.captures.quota(),
       })
       queryClient.invalidateQueries({
         queryKey: queryKeys.enrichment.byId(props.row.enrichmentId),
@@ -59,8 +59,7 @@ export const ScreenshotDetailPanel = defineComponent({
     }
 
     const deleteMutation = useMutation({
-      mutationFn: () =>
-        enrichmentApi.screenshots.delete(props.row.enrichmentId),
+      mutationFn: () => enrichmentApi.captures.delete(props.row.enrichmentId),
       onSuccess: () => {
         toast.success('已删除截图')
         invalidateAll()
@@ -70,7 +69,7 @@ export const ScreenshotDetailPanel = defineComponent({
 
     const recaptureMutation = useMutation({
       mutationFn: () =>
-        enrichmentApi.screenshots.recapture(props.row.enrichmentId),
+        enrichmentApi.captures.recapture(props.row.enrichmentId),
       onSuccess: () => {
         toast.success('已重新截图')
         invalidateAll()

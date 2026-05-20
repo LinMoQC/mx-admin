@@ -122,7 +122,6 @@ export const CategoryView = defineComponent({
             page: 1,
             size: 20,
             categoryIds: [selectedCategoryId.value],
-            select: 'id title created count category slug',
           })
           return res.data ?? []
         },

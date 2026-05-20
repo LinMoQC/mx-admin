@@ -342,11 +342,11 @@ export const TopicDetailPanel = defineComponent({
                     ))}
 
                     {notePagination.value &&
-                      notePagination.value.totalPage > 1 && (
+                      notePagination.value.totalPages > 1 && (
                         <div class="flex justify-center pt-4">
                           <NPagination
-                            page={notePagination.value.currentPage}
-                            pageCount={notePagination.value.totalPage}
+                            page={notePagination.value.page}
+                            pageCount={notePagination.value.totalPages}
                             onUpdatePage={(page) =>
                               fetchTopicNotes(props.topicId!, page)
                             }

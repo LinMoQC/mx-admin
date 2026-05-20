@@ -10,6 +10,5 @@ export const useMemoNoteList = createMemoDataListFetchHook<
   notesApi.getList({
     page,
     size: 50,
-    select: 'nid title _id id',
   }),
 )

@@ -133,7 +133,7 @@ function mapToCardData(e: EnrichmentResult): LinkCardData {
   return {
     title: e.title,
     desc: renderDesc(e),
-    image: e.image?.url,
+    image: e.thumbnailImage?.url,
     color: e.color,
   }
 }

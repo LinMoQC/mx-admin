@@ -7,11 +7,10 @@ import type { PropType } from 'vue'
 import { textToBigCharOrWord } from '~/utils/word'
 
 interface Pager {
-  currentPage: number
-  totalPage: number
+  page: number
+  size: number
   total: number
-  hasPrevPage: boolean
-  hasNextPage: boolean
+  totalPages: number
 }
 
 export const TopicList = defineComponent({
@@ -85,22 +84,22 @@ export const TopicList = defineComponent({
           )}
         </div>
 
-        {props.pager && props.pager.totalPage > 1 && props.onPageChange && (
+        {props.pager && props.pager.totalPages > 1 && props.onPageChange && (
           <div class="flex items-center justify-center gap-2 border-t border-neutral-200 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
             <NButton
               size="small"
-              disabled={!props.pager.hasPrevPage}
-              onClick={() => props.onPageChange!(props.pager!.currentPage - 1)}
+              disabled={props.pager.page <= 1}
+              onClick={() => props.onPageChange!(props.pager!.page - 1)}
             >
               上一页
             </NButton>
             <span class="text-xs text-neutral-500">
-              {props.pager.currentPage} / {props.pager.totalPage}
+              {props.pager.page} / {props.pager.totalPages}
             </span>
             <NButton
               size="small"
-              disabled={!props.pager.hasNextPage}
-              onClick={() => props.onPageChange!(props.pager!.currentPage + 1)}
+              disabled={props.pager.page >= props.pager.totalPages}
+              onClick={() => props.onPageChange!(props.pager!.page + 1)}
             >
               下一页
             </NButton>

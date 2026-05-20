@@ -1,4 +1,16 @@
-import type { Pager } from './base'
+export interface LegacyPager {
+  total: number
+  size: number
+  currentPage: number
+  totalPage: number
+  hasPrevPage: boolean
+  hasNextPage: boolean
+}
+
+export interface EnrichmentImagePalette {
+  dominant: string
+  swatches?: string[]
+}
 
 export interface EnrichmentImage {
   url: string
@@ -6,6 +18,7 @@ export interface EnrichmentImage {
   height?: number
   alt?: string
   blurhash?: string
+  palette?: EnrichmentImagePalette
 }
 
 export interface EnrichmentAttribute {
@@ -15,24 +28,12 @@ export interface EnrichmentAttribute {
   format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
 }
 
-export interface EnrichmentScreenshotPalette {
-  dominant: string
-  swatches?: string[]
-}
-
-export interface EnrichmentScreenshot {
-  url: string
-  width: number
-  height: number
-  blurhash?: string
-  palette?: EnrichmentScreenshotPalette
-}
-
 export interface EnrichmentResult {
   id?: string
   title: string
   description?: string
-  image?: EnrichmentImage
+  thumbnailImage?: EnrichmentImage
+  previewImage?: EnrichmentImage
   url: string
   category: string
   subtype?: string
@@ -41,7 +42,7 @@ export interface EnrichmentResult {
   attributes?: EnrichmentAttribute[]
   color?: string
   links?: Array<{ rel: string; url: string; label?: string }>
-  screenshot?: EnrichmentScreenshot
+  captureImage?: EnrichmentImage
 }
 
 export interface EnrichmentRow {
@@ -66,22 +67,22 @@ export interface EnrichmentRow {
 
 export interface EnrichmentListResponse {
   data: EnrichmentRow[]
-  pagination: Pager
+  pagination: LegacyPager
 }
 
-export interface EnrichmentScreenshotRow {
+export interface EnrichmentCaptureRow {
   enrichmentId: string
   objectKey: string
   bytes: number
   width: number
   height: number
   blurhash: string | null
-  palette: EnrichmentScreenshotPalette | null
+  palette: EnrichmentImagePalette | null
   createdAt: string
   lastAccessedAt: string
 }
 
-export interface EnrichmentScreenshotJoinedRow extends EnrichmentScreenshotRow {
+export interface EnrichmentCaptureJoinedRow extends EnrichmentCaptureRow {
   provider: string
   externalId: string
   url: string
@@ -89,12 +90,12 @@ export interface EnrichmentScreenshotJoinedRow extends EnrichmentScreenshotRow {
   publicUrl: string
 }
 
-export interface EnrichmentScreenshotListResponse {
-  data: EnrichmentScreenshotJoinedRow[]
-  pagination: Pager
+export interface EnrichmentCaptureListResponse {
+  data: EnrichmentCaptureJoinedRow[]
+  pagination: LegacyPager
 }
 
-export interface EnrichmentScreenshotQuota {
+export interface EnrichmentCaptureQuota {
   used: { count: number; totalBytes: number }
   cap: { maxItems: number; maxTotalBytes: number }
   enabled: boolean
@@ -102,7 +103,7 @@ export interface EnrichmentScreenshotQuota {
 }
 
 export interface EnrichmentRowDetail extends EnrichmentRow {
-  screenshot: EnrichmentScreenshotRow | null
+  capture: EnrichmentCaptureRow | null
 }
 
 export type EnrichmentProbeErrorCode =

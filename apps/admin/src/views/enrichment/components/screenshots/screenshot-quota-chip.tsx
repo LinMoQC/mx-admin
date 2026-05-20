@@ -1,6 +1,6 @@
 import { NTooltip } from 'naive-ui'
 import { computed, defineComponent } from 'vue'
-import type { EnrichmentScreenshotQuota } from '~/models/enrichment'
+import type { EnrichmentCaptureQuota } from '~/models/enrichment'
 import type { PropType } from 'vue'
 
 import { formatBytes } from '../../utils'
@@ -9,7 +9,7 @@ export const ScreenshotQuotaChip = defineComponent({
   name: 'ScreenshotQuotaChip',
   props: {
     quota: {
-      type: Object as PropType<EnrichmentScreenshotQuota | null>,
+      type: Object as PropType<EnrichmentCaptureQuota | null>,
       default: null,
     },
   },

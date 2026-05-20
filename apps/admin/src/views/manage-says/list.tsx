@@ -103,17 +103,17 @@ const ManageSayListView = defineComponent({
           </div>
         )}
 
-        {pager.value && pager.value.totalPage > 1 && (
+        {pager.value && pager.value.totalPages > 1 && (
           <div class="flex justify-center">
             <NPagination
-              page={pager.value.currentPage}
+              page={pager.value.page}
               onUpdatePage={(page) => {
                 router.replace({
                   query: { ...route.query, page },
                   params: { ...route.params },
                 })
               }}
-              pageCount={pager.value.totalPage}
+              pageCount={pager.value.totalPages}
               pageSize={pager.value.size}
               showQuickJumper
             />

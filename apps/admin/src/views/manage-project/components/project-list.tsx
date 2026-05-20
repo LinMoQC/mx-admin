@@ -8,11 +8,10 @@ import { RelativeTime } from '~/components/time/relative-time'
 import { textToBigCharOrWord } from '~/utils/word'
 
 interface Pager {
-  currentPage: number
-  totalPage: number
+  page: number
+  size: number
   total: number
-  hasPrevPage: boolean
-  hasNextPage: boolean
+  totalPages: number
 }
 
 export const ProjectList = defineComponent({

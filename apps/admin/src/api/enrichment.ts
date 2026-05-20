@@ -1,12 +1,12 @@
 import type {
+  EnrichmentCaptureListResponse,
+  EnrichmentCaptureQuota,
+  EnrichmentImage,
   EnrichmentListResponse,
   EnrichmentProbeResult,
   EnrichmentProviderMeta,
   EnrichmentResult,
   EnrichmentRowDetail,
-  EnrichmentScreenshot,
-  EnrichmentScreenshotListResponse,
-  EnrichmentScreenshotQuota,
 } from '~/models/enrichment'
 
 import { request } from '~/utils/request'
@@ -66,7 +66,7 @@ export const enrichmentApi = {
   byId: (id: string) =>
     request.get<EnrichmentRowDetail>(`/enrichment/admin/by-id/${encodeId(id)}`),
 
-  screenshots: {
+  captures: {
     list: (
       params: {
         page?: number
@@ -76,8 +76,8 @@ export const enrichmentApi = {
       } = {},
     ) => {
       const { sort = 'last_accessed', order = 'desc', ...rest } = params
-      return request.get<EnrichmentScreenshotListResponse>(
-        '/enrichment/admin/screenshots',
+      return request.get<EnrichmentCaptureListResponse>(
+        '/enrichment/admin/captures',
         {
           params: {
             ...rest,
@@ -89,18 +89,16 @@ export const enrichmentApi = {
     },
 
     quota: () =>
-      request.get<EnrichmentScreenshotQuota>(
-        '/enrichment/admin/screenshots/quota',
-      ),
+      request.get<EnrichmentCaptureQuota>('/enrichment/admin/captures/quota'),
 
     delete: (enrichmentId: string) =>
       request.delete<void>(
-        `/enrichment/admin/screenshots/${encodeId(enrichmentId)}`,
+        `/enrichment/admin/captures/${encodeId(enrichmentId)}`,
       ),
 
     recapture: (enrichmentId: string) =>
-      request.post<EnrichmentScreenshot>(
-        `/enrichment/admin/screenshots/${encodeId(enrichmentId)}/recapture`,
+      request.post<EnrichmentImage>(
+        `/enrichment/admin/captures/${encodeId(enrichmentId)}/recapture`,
       ),
   },
 

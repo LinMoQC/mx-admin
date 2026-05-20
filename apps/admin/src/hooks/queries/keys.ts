@@ -253,17 +253,15 @@ export const queryKeys = {
       [...queryKeys.enrichment.lists(), params] as const,
     providers: () => [...queryKeys.enrichment.all, 'providers'] as const,
     byId: (id: string) => [...queryKeys.enrichment.all, 'by-id', id] as const,
-    screenshots: {
-      all: () => [...queryKeys.enrichment.all, 'screenshots'] as const,
+    captures: {
+      all: () => [...queryKeys.enrichment.all, 'captures'] as const,
       list: (params?: {
         page?: number
         size?: number
         sort?: 'last_accessed' | 'created' | 'bytes'
         order?: 'asc' | 'desc'
-      }) =>
-        [...queryKeys.enrichment.screenshots.all(), 'list', params] as const,
-      quota: () =>
-        [...queryKeys.enrichment.screenshots.all(), 'quota'] as const,
+      }) => [...queryKeys.enrichment.captures.all(), 'list', params] as const,
+      quota: () => [...queryKeys.enrichment.captures.all(), 'quota'] as const,
     },
   },
 

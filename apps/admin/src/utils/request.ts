@@ -2,11 +2,10 @@ import { ofetch } from 'ofetch'
 import { toast } from 'vue-sonner'
 import type { FetchOptions } from 'ofetch'
 
-import { simpleCamelcaseKeys } from './camelcase-keys'
-
 import { API_URL } from '~/constants/env'
 
 import { router } from '../router/router'
+import { simpleCamelcaseKeys } from './camelcase-keys'
 import { uuid } from './index'
 
 export class SystemError extends Error {
@@ -24,6 +23,7 @@ export class BusinessError extends Error {
     message: string | string[],
     public statusCode: number,
     public data?: unknown,
+    public code?: string | number,
   ) {
     super(Array.isArray(message) ? message.join(', ') : message)
     this.name = 'BusinessError'
@@ -73,10 +73,11 @@ export const $api = ofetch.create({
     }
 
     const data = response._data
-    const message = data?.message || '请求失败'
+    const message = data?.error?.message || data?.message || '请求失败'
+    const code = data?.error?.code
     const displayMsg = Array.isArray(message) ? message.join(', ') : message
     toast.error(displayMsg)
-    throw new BusinessError(message, status, data)
+    throw new BusinessError(message, status, data, code)
   },
 })
 
@@ -86,27 +87,31 @@ export type RequestOptions<T = unknown> = Omit<FetchOptions<'json'>, 'body'> & {
   bypassTransform?: boolean
 }
 
-/**
- * 转换响应数据
- * 1. camelCase 转换
- * 2. 解包后端包装的数组响应 { data: [...] } -> [...]
- */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isResponseEnvelope(value: unknown): value is Record<string, unknown> {
+  return (
+    isPlainObject(value) &&
+    'data' in value &&
+    Object.keys(value).every((key) => key === 'data' || key === 'meta')
+  )
+}
+
 function transformResponse<T>(data: unknown, bypass?: boolean): T {
   if (bypass || !data || typeof data !== 'object') {
     return data as T
   }
 
-  let result = simpleCamelcaseKeys(data as Record<string, unknown>)
+  const result = simpleCamelcaseKeys(data as Record<string, unknown>)
 
-  if (
-    result &&
-    typeof result === 'object' &&
-    !Array.isArray(result) &&
-    'data' in result &&
-    Array.isArray(result.data) &&
-    Object.keys(result).length === 1
-  ) {
-    result = result.data
+  if (isResponseEnvelope(result)) {
+    const meta = (result as any).meta
+    if (meta && isPlainObject(meta.pagination)) {
+      return { data: (result as any).data, pagination: meta.pagination } as T
+    }
+    return (result as any).data as T
   }
 
   return result as T

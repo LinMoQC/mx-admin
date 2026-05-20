@@ -11,7 +11,7 @@ export const CacheNormalizedSection = defineComponent({
   setup(props) {
     return () => {
       const { result } = props
-      const image = result.image
+      const image = result.thumbnailImage
       const attributes = result.attributes ?? []
       const links = result.links ?? []
       return (

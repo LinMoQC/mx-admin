@@ -6,7 +6,6 @@ import { request } from '~/utils/request'
 export interface GetPostsParams {
   page?: number
   size?: number
-  select?: string
   sortBy?: string
   sortOrder?: number
   categoryIds?: string[]

@@ -114,15 +114,15 @@ export const InsightsArticleSelectorModal = defineComponent({
           shouldFetchPosts
             ? hasKeyword
               ? searchApi.searchPosts({ keyword, size: 50 })
-              : postsApi.getList({ size: 50, select: 'title' })
+              : postsApi.getList({ size: 50 })
             : Promise.resolve({ data: [] }),
           shouldFetchNotes
             ? hasKeyword
               ? searchApi.searchNotes({ keyword, size: 50 })
-              : notesApi.getList({ size: 50, select: 'title' })
+              : notesApi.getList({ size: 50 })
             : Promise.resolve({ data: [] }),
           shouldFetchPages
-            ? pagesApi.getList({ select: 'title' })
+            ? pagesApi.getList({})
             : Promise.resolve({ data: [] }),
         ])
 

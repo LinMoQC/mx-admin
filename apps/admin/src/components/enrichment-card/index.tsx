@@ -274,10 +274,10 @@ const MediaCard = defineComponent({
       const e = props.enrichment
       return (
         <ImageShell href={e.url}>
-          {e.image && (
+          {e.thumbnailImage && (
             <img
-              src={e.image.url}
-              alt={e.image.alt || e.title}
+              src={e.thumbnailImage.url}
+              alt={e.thumbnailImage.alt || e.title}
               class="h-[120px] w-[80px] shrink-0 rounded object-cover"
               loading="lazy"
             />
@@ -307,10 +307,10 @@ const BookCard = defineComponent({
       const e = props.enrichment
       return (
         <ImageShell href={e.url}>
-          {e.image && (
+          {e.thumbnailImage && (
             <img
-              src={e.image.url}
-              alt={e.image.alt || e.title}
+              src={e.thumbnailImage.url}
+              alt={e.thumbnailImage.alt || e.title}
               class="h-[80px] w-[60px] shrink-0 rounded object-cover"
               loading="lazy"
             />
@@ -335,10 +335,10 @@ const MusicCard = defineComponent({
       const e = props.enrichment
       return (
         <ImageShell href={e.url}>
-          {e.image && (
+          {e.thumbnailImage && (
             <img
-              src={e.image.url}
-              alt={e.image.alt || e.title}
+              src={e.thumbnailImage.url}
+              alt={e.thumbnailImage.alt || e.title}
               class="size-[72px] shrink-0 rounded object-cover"
               loading="lazy"
             />
@@ -494,10 +494,10 @@ const FallbackCard = defineComponent({
       const e = props.enrichment
       return (
         <ImageShell href={e.url}>
-          {e.image && (
+          {e.thumbnailImage && (
             <img
-              src={e.image.url}
-              alt={e.image.alt || e.title}
+              src={e.thumbnailImage.url}
+              alt={e.thumbnailImage.alt || e.title}
               class="size-[80px] shrink-0 rounded object-cover"
               loading="lazy"
             />

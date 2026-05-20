@@ -136,8 +136,8 @@ const ReaderView = defineComponent({
         })
 
       readers.value.push(...newReaders)
-      currentPage.value = result.pagination.currentPage
-      hasNextPage.value = result.pagination.hasNextPage
+      currentPage.value = result.pagination.page
+      hasNextPage.value = result.pagination.page < result.pagination.totalPages
       loading.value = false
     }
 

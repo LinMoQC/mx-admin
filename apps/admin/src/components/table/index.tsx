@@ -123,9 +123,9 @@ export const Table = defineComponent({
             noPagination
               ? undefined
               : pager?.value && {
-                  page: pager.value.currentPage,
+                  page: pager.value.page,
                   pageSize: pager.value.size,
-                  pageCount: pager.value.totalPage,
+                  pageCount: pager.value.totalPages,
                   // showQuickJumper: ui.viewport.value.mobile ? false : true,
                   showQuickJumper: true,
                   pageSlot: ui.viewport.value.mobile

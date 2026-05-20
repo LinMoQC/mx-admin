@@ -7,9 +7,9 @@ import {
 import { computed, defineComponent, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type {
+  EnrichmentCaptureJoinedRow,
+  EnrichmentCaptureListResponse,
   EnrichmentRow,
-  EnrichmentScreenshotJoinedRow,
-  EnrichmentScreenshotListResponse,
 } from '~/models/enrichment'
 import type { PropType } from 'vue'
 import type { CacheFilterMode } from './components/cache/cache-list'
@@ -107,8 +107,8 @@ export default defineComponent({
     const screenshotsEnabled = computed(() => source.value === 'screenshots')
 
     const { data: quotaData, refetch: refetchQuota } = useQuery({
-      queryKey: queryKeys.enrichment.screenshots.quota(),
-      queryFn: () => enrichmentApi.screenshots.quota(),
+      queryKey: queryKeys.enrichment.captures.quota(),
+      queryFn: () => enrichmentApi.captures.quota(),
       enabled: screenshotsEnabled,
       staleTime: 30_000,
     })
@@ -118,12 +118,12 @@ export default defineComponent({
       return cacheRows.value.find((r) => r.id === selectedId.value) ?? null
     })
 
-    const selectedScreenshot = computed<EnrichmentScreenshotJoinedRow | null>(
+    const selectedScreenshot = computed<EnrichmentCaptureJoinedRow | null>(
       () => {
         if (source.value !== 'screenshots' || !selectedId.value) return null
         const queries =
-          queryClient.getQueriesData<EnrichmentScreenshotListResponse>({
-            queryKey: queryKeys.enrichment.screenshots.all(),
+          queryClient.getQueriesData<EnrichmentCaptureListResponse>({
+            queryKey: queryKeys.enrichment.captures.all(),
           })
         for (const [, cached] of queries) {
           const hit = cached?.data?.find(
@@ -147,7 +147,7 @@ export default defineComponent({
       if (isMobile.value) showDetailOnMobile.value = true
     }
 
-    const handleScreenshotSelect = (row: EnrichmentScreenshotJoinedRow) => {
+    const handleScreenshotSelect = (row: EnrichmentCaptureJoinedRow) => {
       selectedId.value = row.enrichmentId
       if (isMobile.value) showDetailOnMobile.value = true
     }
@@ -263,7 +263,7 @@ export default defineComponent({
               name="刷新"
               onClick={() => {
                 queryClient.invalidateQueries({
-                  queryKey: queryKeys.enrichment.screenshots.all(),
+                  queryKey: queryKeys.enrichment.captures.all(),
                 })
                 refetchQuota()
               }}

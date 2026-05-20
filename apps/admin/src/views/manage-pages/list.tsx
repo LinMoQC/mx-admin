@@ -155,7 +155,6 @@ export const ManagePageListView = defineComponent({
         pagesApi.getList({
           page: 1,
           size: 50,
-          select: 'title subtitle id createdAt modifiedAt slug',
         }),
     })
 

@@ -10,11 +10,10 @@ import type { PropType } from 'vue'
 import { CommentListItem } from './comment-list-item'
 
 interface Pager {
-  currentPage: number
-  totalPage: number
+  page: number
+  size: number
   total: number
-  hasPrevPage: boolean
-  hasNextPage: boolean
+  totalPages: number
 }
 
 const FILTER_OPTIONS = [
@@ -95,7 +94,7 @@ export const CommentList = defineComponent({
 
     const totalCount = computed(() => props.pager?.total ?? 0)
     const hasMultiplePages = computed(
-      () => props.pager && props.pager.totalPage > 1,
+      () => props.pager && props.pager.totalPages > 1,
     )
     const showSelectAllHint = computed(
       () =>
@@ -205,11 +204,11 @@ export const CommentList = defineComponent({
           )}
         </div>
 
-        {props.pager && props.pager.totalPage > 1 && (
+        {props.pager && props.pager.totalPages > 1 && (
           <div class="flex items-center justify-end border-t border-neutral-200 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
             <NPagination
-              page={props.pager.currentPage}
-              pageCount={props.pager.totalPage}
+              page={props.pager.page}
+              pageCount={props.pager.totalPages}
               onUpdatePage={props.onPageChange}
               simple
             />

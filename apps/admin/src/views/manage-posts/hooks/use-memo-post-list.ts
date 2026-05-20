@@ -15,6 +15,5 @@ export const useMemoPostList = createMemoDataListFetchHook<
   postsApi.getList({
     page,
     size: 50,
-    select: 'id title nid _id slug category categoryId',
   }),
 )

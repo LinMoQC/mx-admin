@@ -2,8 +2,8 @@ import { Loader2 as LoaderIcon } from 'lucide-vue-next'
 import { NScrollbar, NSelect } from 'naive-ui'
 import { computed, defineComponent } from 'vue'
 import type {
-  EnrichmentScreenshotJoinedRow,
-  EnrichmentScreenshotQuota,
+  EnrichmentCaptureJoinedRow,
+  EnrichmentCaptureQuota,
 } from '~/models/enrichment'
 import type { PropType } from 'vue'
 
@@ -42,11 +42,11 @@ export const ScreenshotList = defineComponent({
       default: null,
     },
     quota: {
-      type: Object as PropType<EnrichmentScreenshotQuota | null>,
+      type: Object as PropType<EnrichmentCaptureQuota | null>,
       default: null,
     },
     onSelect: {
-      type: Function as PropType<(row: EnrichmentScreenshotJoinedRow) => void>,
+      type: Function as PropType<(row: EnrichmentCaptureJoinedRow) => void>,
       required: true,
     },
     onPageChange: {
@@ -76,13 +76,13 @@ export const ScreenshotList = defineComponent({
 
     const { data, isPending, isFetching } = useQuery({
       queryKey: computed(() =>
-        queryKeys.enrichment.screenshots.list(params.value),
+        queryKeys.enrichment.captures.list(params.value),
       ),
-      queryFn: () => enrichmentApi.screenshots.list(params.value),
+      queryFn: () => enrichmentApi.captures.list(params.value),
       placeholderData: (prev) => prev,
     })
 
-    const rows = computed<EnrichmentScreenshotJoinedRow[]>(
+    const rows = computed<EnrichmentCaptureJoinedRow[]>(
       () => data.value?.data || [],
     )
     const pageCount = computed(() => data.value?.pagination.totalPage || 1)
