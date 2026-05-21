@@ -16,6 +16,7 @@ import { galleryEditNodes } from '@haklex/rich-ext-gallery'
 import { BlockHandlePlugin } from '@haklex/rich-plugin-block-handle'
 import { FloatingToolbarPlugin } from '@haklex/rich-plugin-floating-toolbar'
 import { FloatingLinkEditorPlugin } from '@haklex/rich-plugin-link-edit'
+import { LiteXmlPastePlugin } from '@haklex/rich-plugin-litexml-paste'
 import { MentionMenuPlugin } from '@haklex/rich-plugin-mention'
 import { SlashMenuPlugin } from '@haklex/rich-plugin-slash-menu'
 import {
@@ -118,6 +119,7 @@ export function ShiroEditor({
         }
       >
         <BlockHandlePlugin />
+        <LiteXmlPastePlugin />
         <FloatingToolbarPlugin actions={floatingToolbarActions} />
         <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
         <ExcalidrawPlugin />
