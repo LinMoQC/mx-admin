@@ -221,9 +221,9 @@ const ImageCoverInput = defineComponent({
       >
         {{
           trigger() {
-            const validImages = (props.images as Image[]).filter(
-              (img) => img?.src,
-            )
+            const validImages = (
+              (props.images as Image[] | null | undefined) ?? []
+            ).filter((img) => img?.src)
             return validImages.length > 0 ? (
               <NSelect
                 class="w-full"
