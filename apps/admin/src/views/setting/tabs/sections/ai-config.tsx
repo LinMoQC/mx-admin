@@ -56,6 +56,7 @@ interface AIConfig {
   writerModel?: AIModelAssignment
   commentReviewModel?: AIModelAssignment
   translationModel?: AIModelAssignment
+  translationReviewModel?: AIModelAssignment
   insightsModel?: AIModelAssignment
   insightsTranslationModel?: AIModelAssignment
   enableSummary: boolean
@@ -66,6 +67,8 @@ interface AIConfig {
   enableTranslation?: boolean
   enableAutoGenerateTranslation?: boolean
   translationTargetLanguages?: string[]
+  enableTranslationReview?: boolean
+  translationReviewScoreThreshold?: number
   enableInsights?: boolean
   enableAutoGenerateInsightsOnCreate?: boolean
   enableAutoGenerateInsightsOnUpdate?: boolean
@@ -860,6 +863,15 @@ export const AIConfigSection = defineComponent({
           />
 
           <AIModelAssignmentRow
+            label="翻译审稿"
+            description="用于审稿与修订翻译的模型，留空则复用翻译模型"
+            assignment={config.value.translationReviewModel}
+            providers={config.value.providers || []}
+            providerModels={providerModels.value || {}}
+            onUpdate={(a) => updateConfig({ translationReviewModel: a })}
+          />
+
+          <AIModelAssignmentRow
             label="精读生成"
             description="用于生成长篇精读的模型"
             assignment={config.value.insightsModel}
@@ -1058,6 +1070,38 @@ export const AIConfigSection = defineComponent({
               value={config.value.translationTargetLanguages || []}
               onUpdate={(v) => updateConfig({ translationTargetLanguages: v })}
               disabled={!config.value.enableTranslation}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title="启用翻译审稿"
+            description="开启后走 writer → reviewer → editor 流水线：reviewer 按本地化规范评分，低于阈值时由 editor 修订有问题的段落"
+          >
+            <NSwitch
+              value={config.value.enableTranslationReview}
+              onUpdateValue={(v: boolean) =>
+                updateConfig({ enableTranslationReview: v })
+              }
+              disabled={!config.value.enableTranslation}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title="审稿评分阈值"
+            description="reviewer 评分（0-100）≥ 阈值时直接落盘，低于阈值触发 editor 修订。默认 85"
+          >
+            <NInputNumber
+              value={config.value.translationReviewScoreThreshold ?? 85}
+              min={0}
+              max={100}
+              step={5}
+              onUpdateValue={(v) =>
+                updateConfig({ translationReviewScoreThreshold: v ?? 85 })
+              }
+              disabled={
+                !config.value.enableTranslation ||
+                !config.value.enableTranslationReview
+              }
             />
           </SettingsRow>
         </SettingsSection>
