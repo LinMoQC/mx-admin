@@ -1,7 +1,5 @@
 // @see https://stackoverflow.com/questions/2541481/get-average-color-of-image-via-javascript
 
-import { rgbaToThumbHash } from 'thumbhash'
-
 import { computeImageMeta } from '@haklex/rich-editor/renderers'
 
 export function getDominantColor(imageObject: HTMLImageElement) {
@@ -26,22 +24,6 @@ export function rgbToHex(red: number, green: number, blue: number) {
 
 export function rgbObjectToHex(rgb: { r: number; g: number; b: number }) {
   return rgbToHex(rgb.r, rgb.g, rgb.b)
-}
-
-export function getThumbhash(img: HTMLImageElement): string {
-  const scale = Math.min(100 / img.naturalWidth, 100 / img.naturalHeight, 1)
-  const sw = Math.max(1, Math.round(img.naturalWidth * scale))
-  const sh = Math.max(1, Math.round(img.naturalHeight * scale))
-  const canvas = document.createElement('canvas')
-  canvas.width = sw
-  canvas.height = sh
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0, sw, sh)
-  const rgba = ctx.getImageData(0, 0, sw, sh).data
-  const u8 = rgbaToThumbHash(sw, sh, rgba)
-  let bin = ''
-  for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i])
-  return btoa(bin)
 }
 
 export const encodeImageToThumbhash = async (image: HTMLImageElement) => {

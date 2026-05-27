@@ -3,12 +3,10 @@ import { ChevronDownIcon, ExternalLinkIcon, Trash2Icon } from 'lucide-vue-next'
 import { NButton, NColorPicker, NInput, NInputNumber } from 'naive-ui'
 import { thumbHashToDataURL } from 'thumbhash'
 import { computed, defineComponent, ref } from 'vue'
-import { toast } from 'vue-sonner'
 import type { Image as ImageModel } from '~/models/base'
 import type { PropType } from 'vue'
 
-import { getDominantColor, getThumbhash } from '~/utils/image'
-import { isVideoExt, pickImagesFromMarkdown } from '~/utils/markdown'
+import { pickImagesFromMarkdown } from '~/utils/markdown'
 
 export const ImageDetailSection = defineComponent({
   props: {
@@ -30,8 +28,6 @@ export const ImageDetailSection = defineComponent({
     },
   },
   setup(props) {
-    const loading = ref(false)
-
     const originImageMap = computed(() => {
       const map = new Map<string, ImageModel>()
       props.images.forEach((image) => {
@@ -88,103 +84,17 @@ export const ImageDetailSection = defineComponent({
 
       return nextImages
     })
-    const handleCorrectImageDimensions = async () => {
-      loading.value = true
-
-      const fetchImageTasks = await Promise.allSettled(
-        images.value.map((item) => {
-          return new Promise<ImageModel>((resolve, reject) => {
-            const ext = item.src.split('.').pop()!
-            const isVideo = isVideoExt(ext)
-
-            if (isVideo) {
-              const video = document.createElement('video')
-
-              video.src = item.src
-
-              video.addEventListener('loadedmetadata', () => {
-                resolve({
-                  height: video.videoHeight,
-                  type: ext,
-                  src: item.src,
-                  width: video.videoWidth,
-                  accent: '#fff',
-                })
-              })
-
-              video.addEventListener('error', (e) => {
-                reject({
-                  err: e,
-                  src: item.src,
-                })
-              })
-            } else {
-              const $image = new Image()
-              $image.src = item.src
-              $image.crossOrigin = 'Anonymous'
-              $image.addEventListener('load', () => {
-                resolve({
-                  width: $image.naturalWidth,
-                  height: $image.naturalHeight,
-                  src: item.src,
-                  type: ext,
-                  accent: getDominantColor($image),
-                  thumbhash: getThumbhash($image),
-                })
-              })
-              $image.onerror = (err) => {
-                reject({
-                  err,
-                  src: item.src,
-                })
-              }
-            }
-          })
-        }),
-      )
-
-      loading.value = false
-
-      const nextImageDimensions = [] as ImageModel[]
-      fetchImageTasks.forEach((task, index) => {
-        if (task.status === 'fulfilled') {
-          nextImageDimensions.push(task.value)
-        } else {
-          // 保留原始图片信息，避免丢失
-          const originalImage = images.value[index]
-          if (originalImage) {
-            nextImageDimensions.push(originalImage)
-          }
-          toast.warning(
-            `获取图片信息失败：${task.reason.src}: ${task.reason.err}`,
-          )
-        }
-      })
-
-      props.onChange(nextImageDimensions)
-
-      loading.value = false
-    }
 
     // 展开状态管理
     const expandedIndex = ref<number | null>(null)
 
     return () => (
       <div class="flex w-full flex-col">
-        {/* 头部操作区 */}
+        {/* 头部 */}
         <div class="flex items-center justify-between gap-3">
           <span class="text-sm text-neutral-500">
-            调整 Markdown 中的图片信息
+            Markdown 中的图片信息（由服务端自动写入）
           </span>
-          <NButton
-            loading={loading.value}
-            size="tiny"
-            onClick={handleCorrectImageDimensions}
-            type="primary"
-            tertiary
-          >
-            自动修正
-          </NButton>
         </div>
 
         {/* 图片列表 */}
