@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## 8.1.0 (2026-05-28)
+
+* release: v8.1.0
+* feat(admin): migrate blurhash → thumbhash across admin UI ([980fe52](https://github.com/mx-space/mx-admin/commit/980fe52))
+* feat(admin): add translation review section to AI settings ([c746c33](https://github.com/mx-space/mx-admin/commit/c746c33))
+* refactor(admin): drop markdown client-side image hash compute (server-side now authoritative) ([24aadd8](https://github.com/mx-space/mx-admin/commit/24aadd8))
+
 ## 7.3.0 (2026-05-15)
 
 * release: v7.3.0 ([963b6a9](https://github.com/mx-space/mx-admin/commit/963b6a9))
