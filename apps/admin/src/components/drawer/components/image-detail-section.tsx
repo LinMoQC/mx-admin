@@ -1,25 +1,13 @@
-import { decode } from 'blurhash'
 import { uniqBy } from 'es-toolkit/compat'
 import { ChevronDownIcon, ExternalLinkIcon, Trash2Icon } from 'lucide-vue-next'
-import {
-  NButton,
-  NCheckbox,
-  NColorPicker,
-  NInput,
-  NInputNumber,
-} from 'naive-ui'
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { NButton, NColorPicker, NInput, NInputNumber } from 'naive-ui'
+import { thumbHashToDataURL } from 'thumbhash'
+import { computed, defineComponent, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import type { Image as ImageModel } from '~/models/base'
 import type { PropType } from 'vue'
 
-import { useStorage } from '@vueuse/core'
-
-import {
-  encodeImageToBlurhash,
-  encodeImageToBlurhashWebgl,
-  getDominantColor,
-} from '~/utils/image'
+import { getDominantColor, getThumbhash } from '~/utils/image'
 import { isVideoExt, pickImagesFromMarkdown } from '~/utils/markdown'
 
 export const ImageDetailSection = defineComponent({
@@ -43,8 +31,6 @@ export const ImageDetailSection = defineComponent({
   },
   setup(props) {
     const loading = ref(false)
-
-    const useWebglFlag = useStorage('useWebglFlag', true)
 
     const originImageMap = computed(() => {
       const map = new Map<string, ImageModel>()
@@ -72,7 +58,7 @@ export const ImageDetailSection = defineComponent({
                   width: existImageInfo?.width,
                   type: existImageInfo?.type,
                   accent: existImageInfo?.accent,
-                  blurHash: existImageInfo?.blurHash,
+                  thumbhash: existImageInfo?.thumbhash,
                 } as any
               })
               .concat(validPropsImages),
@@ -143,9 +129,7 @@ export const ImageDetailSection = defineComponent({
                   src: item.src,
                   type: ext,
                   accent: getDominantColor($image),
-                  blurHash: useWebglFlag
-                    ? encodeImageToBlurhashWebgl($image)
-                    : encodeImageToBlurhash($image),
+                  thumbhash: getThumbhash($image),
                 })
               })
               $image.onerror = (err) => {
@@ -202,17 +186,6 @@ export const ImageDetailSection = defineComponent({
             自动修正
           </NButton>
         </div>
-
-        {/* WebGL 选项 */}
-        <label class="mt-3 flex cursor-pointer items-center gap-2 text-xs text-neutral-400">
-          <NCheckbox
-            size="small"
-            checked={useWebglFlag.value}
-            onUpdateChecked={(e) => void (useWebglFlag.value = e)}
-            aria-label="使用 WebGL 加速"
-          />
-          <span>使用 WebGL 加速图片处理（实验性）</span>
-        </label>
 
         {/* 图片列表 */}
         {images.value.length > 0 && (
@@ -328,13 +301,13 @@ export const ImageDetailSection = defineComponent({
                         </div>
                       </div>
 
-                      {/* BlurHash 预览 */}
-                      {image.blurHash && (
+                      {/* Thumbhash 预览 */}
+                      {image.thumbhash && (
                         <div>
                           <label class="mb-1 block text-xs text-neutral-500">
-                            BlurHash 预览
+                            Thumbhash 预览
                           </label>
-                          <BlurHashPreview hash={image.blurHash} />
+                          <ThumbhashPreview hash={image.thumbhash} />
                         </div>
                       )}
 
@@ -391,7 +364,7 @@ export const ImageDetailSection = defineComponent({
   },
 })
 
-const BlurHashPreview = defineComponent({
+const ThumbhashPreview = defineComponent({
   props: {
     hash: {
       type: String,
@@ -399,25 +372,22 @@ const BlurHashPreview = defineComponent({
     },
   },
   setup(props) {
-    const canvasRef = ref<HTMLCanvasElement | null>(null)
-
-    onMounted(() => {
-      const canvas = canvasRef.value!
-      const ctx = canvas.getContext('2d')!
-      const pixels = decode(props.hash, 32, 32)
-      const imageData = ctx.createImageData(32, 32)
-      imageData.data.set(pixels)
-      ctx.putImageData(imageData, 0, 0)
+    const dataUrl = computed(() => {
+      try {
+        const u8 = Uint8Array.from(atob(props.hash), (c) => c.charCodeAt(0))
+        return thumbHashToDataURL(u8)
+      } catch {
+        return undefined
+      }
     })
-
-    return () => (
-      <canvas
-        ref={canvasRef}
-        class="rounded bg-cover bg-center"
-        height={32}
-        width={32}
-        aria-label="BlurHash 预览图"
-      />
-    )
+    return () =>
+      dataUrl.value ? (
+        <img
+          src={dataUrl.value}
+          class="rounded"
+          alt="Thumbhash 预览图"
+          aria-label="Thumbhash 预览图"
+        />
+      ) : null
   },
 })

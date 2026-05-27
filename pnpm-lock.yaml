@@ -146,9 +146,6 @@ importers:
       better-auth:
         specifier: 1.4.18
         version: 1.4.18(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.5(@types/node@25.6.0)(happy-dom@15.11.7)(vite@8.0.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.6.0)(jiti@2.6.1)(yaml@2.8.3)))(vue@3.5.30(typescript@5.9.3))
-      blurhash:
-        specifier: 2.0.5
-        version: 2.0.5
       buffer:
         specifier: 6.0.3
         version: 6.0.3
@@ -248,6 +245,9 @@ importers:
       sortablejs:
         specifier: 1.15.7
         version: 1.15.7
+      thumbhash:
+        specifier: 0.1.1
+        version: 0.1.1
       umi-request:
         specifier: 1.4.0
         version: 1.4.0
@@ -4130,9 +4130,6 @@ packages:
 
   birpc@4.0.0:
     resolution: {integrity: sha512-LShSxJP0KTmd101b6DRyGBj57LZxSDYWKitQNW/mi8GRMvZb078Uf9+pveax1DrVL89vm7mWe+TovdI/UDOuPw==}
-
-  blurhash@2.0.5:
-    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -11418,8 +11415,6 @@ snapshots:
   birpc@2.9.0: {}
 
   birpc@4.0.0: {}
-
-  blurhash@2.0.5: {}
 
   boolbase@1.0.0: {}
 
